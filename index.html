@@ -1,0 +1,3697 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NGG Layout Builder</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<!-- html2canvas-pro is a maintained fork with proper support for modern CSS
+     (aspect-ratio, CSS grid, color functions). Used for JPG export. -->
+<script src="https://cdn.jsdelivr.net/npm/html2canvas-pro@1.5.8/dist/html2canvas-pro.min.js" defer></script>
+<style>
+:root {
+  /* Light theme (VibeUI-inspired) */
+  --bg: #fafafa;
+  --panel: #ffffff;
+  --panel-2: #f5f5f5;
+  --panel-hover: #f0f0f0;
+  --border: #e5e7eb;
+  --border-strong: #d1d5db;
+  --text: #111111;
+  --text-muted: #6b7280;
+  --text-subtle: #9ca3af;
+  --accent: #C7B695;
+  --accent-strong: #907962;
+  --accent-soft: #F6DAAB;
+  --brand: #AA182C;
+  --brand-soft: #fee2e4;
+  --canvas-bg: #ececec;
+  --viewport-bg: #ffffff;
+  --shadow-sm: 0 1px 2px rgba(0,0,0,0.04);
+  --shadow: 0 1px 3px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.04);
+  --shadow-lg: 0 8px 24px rgba(0,0,0,0.10);
+  --placeholder-grid-1: #e8e8e8;
+  --placeholder-grid-2: #f3f3f3;
+  --warn: #d97706;
+  --warn-bg: #fef3c7;
+}
+
+[data-theme="dark"] {
+  --bg: #0f1115;
+  --panel: #1a1d27;
+  --panel-2: #262a36;
+  --panel-hover: #2d3142;
+  --border: #2d3142;
+  --border-strong: #3d4252;
+  --text: #e6e8ee;
+  --text-muted: #a1a6b4;
+  --text-subtle: #6b7180;
+  --accent: #C7B695;
+  --accent-strong: #F6DAAB;
+  --accent-soft: #907962;
+  --brand: #AA182C;
+  --brand-soft: #3a0d12;
+  --canvas-bg: #050608;
+  --viewport-bg: #ffffff;
+  --shadow-sm: 0 1px 2px rgba(0,0,0,0.3);
+  --shadow: 0 1px 3px rgba(0,0,0,0.4);
+  --shadow-lg: 0 8px 24px rgba(0,0,0,0.5);
+  --placeholder-grid-1: #d8d8d8;
+  --placeholder-grid-2: #e8e8e8;
+  --warn: #fbbf24;
+  --warn-bg: #422006;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+html, body {
+  height: 100%;
+  font-family: 'Prompt', system-ui, -apple-system, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  font-size: 14px;
+  overflow: hidden;
+}
+
+button { font-family: inherit; cursor: pointer; border: none; background: none; color: inherit; }
+input, textarea { font-family: inherit; }
+.mono { font-family: 'JetBrains Mono', monospace; }
+
+/* ===== Topbar ===== */
+.topbar {
+  height: 52px;
+  background: var(--panel);
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  padding: 0 16px;
+  gap: 12px;
+  z-index: 10;
+  position: relative;
+}
+
+.logo {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 600;
+  font-size: 15px;
+}
+.logo-mark {
+  width: 26px;
+  height: 26px;
+  background: var(--accent);
+  border-radius: 6px;
+  display: grid;
+  place-items: center;
+  color: #fff;
+  font-weight: 700;
+  font-size: 12px;
+  letter-spacing: 0.5px;
+}
+.logo-sub {
+  color: var(--text-muted);
+  font-size: 11px;
+  margin-left: 6px;
+  font-weight: 400;
+}
+
+.topbar-spacer { flex: 1; }
+
+.tb-btn {
+  height: 32px;
+  padding: 0 12px;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 500;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: transparent;
+  color: var(--text);
+  border: 1px solid var(--border);
+  transition: all 0.15s;
+}
+.tb-btn:hover { background: var(--panel-hover); border-color: var(--border-strong); }
+.tb-btn.primary {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+}
+.tb-btn.primary:hover { background: var(--accent-strong); border-color: var(--accent-strong); }
+.tb-btn.danger:hover { background: var(--brand-soft); border-color: var(--brand); color: var(--brand); }
+.tb-btn.icon-only { width: 32px; padding: 0; justify-content: center; }
+
+.lang-toggle, .theme-toggle {
+  display: inline-flex;
+  background: var(--panel-2);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 2px;
+  gap: 2px;
+}
+.lang-toggle button, .theme-toggle button {
+  height: 26px;
+  padding: 0 10px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-muted);
+}
+.lang-toggle button.active, .theme-toggle button.active {
+  background: var(--panel);
+  color: var(--text);
+  box-shadow: var(--shadow-sm);
+}
+
+/* ===== Main layout ===== */
+.workspace {
+  display: grid;
+  grid-template-columns: 280px 1fr 320px;
+  height: calc(100vh - 52px);
+}
+
+.panel-left, .panel-right {
+  background: var(--panel);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+.panel-left { border-right: 1px solid var(--border); }
+.panel-right { border-left: 1px solid var(--border); }
+
+.panel-header {
+  padding: 12px 14px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.panel-title {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  color: var(--text-muted);
+}
+
+/* ===== Library ===== */
+.lib-search {
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--border);
+}
+.lib-search input {
+  width: 100%;
+  height: 32px;
+  padding: 0 10px;
+  background: var(--panel-2);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  font-size: 12px;
+  color: var(--text);
+  outline: none;
+  transition: border-color 0.15s;
+}
+.lib-search input:focus { border-color: var(--accent); }
+
+.lib-tabs {
+  display: flex;
+  gap: 4px;
+  padding: 8px 10px;
+  border-bottom: 1px solid var(--border);
+}
+.lib-tab {
+  flex: 1;
+  height: 28px;
+  border-radius: 5px;
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--text-muted);
+  background: var(--panel-2);
+  transition: all 0.15s;
+}
+.lib-tab.active { background: var(--accent); color: #fff; }
+.lib-tab:hover:not(.active) { background: var(--panel-hover); color: var(--text); }
+
+.lib-list {
+  flex: 1;
+  overflow-y: auto;
+  padding: 8px;
+}
+.lib-cat-title {
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  color: var(--text-subtle);
+  padding: 8px 8px 4px;
+}
+
+.lib-item {
+  padding: 9px 10px;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+  background: var(--panel);
+  margin-bottom: 4px;
+  cursor: grab;
+  transition: all 0.15s;
+}
+.lib-item:hover {
+  border-color: var(--accent);
+  background: var(--panel-hover);
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-sm);
+}
+.lib-item:active { cursor: grabbing; }
+.lib-item.dragging { opacity: 0.4; }
+
+.lib-item-name {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text);
+  margin-bottom: 2px;
+}
+.lib-item-desc {
+  font-size: 10.5px;
+  color: var(--text-muted);
+  line-height: 1.4;
+}
+.lib-item-meta {
+  display: inline-block;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px;
+  color: var(--accent-strong);
+  background: var(--accent-soft);
+  padding: 1px 5px;
+  border-radius: 3px;
+  margin-top: 4px;
+}
+[data-theme="dark"] .lib-item-meta {
+  background: rgba(199, 182, 149, 0.15);
+  color: var(--accent);
+}
+
+/* ===== Canvas ===== */
+.canvas-wrap {
+  background: var(--canvas-bg);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  position: relative;
+  background-image:
+    linear-gradient(var(--border) 1px, transparent 1px),
+    linear-gradient(90deg, var(--border) 1px, transparent 1px);
+  background-size: 40px 40px;
+  background-position: 0 0, 0 0;
+}
+[data-theme="dark"] .canvas-wrap {
+  background-image:
+    linear-gradient(rgba(255,255,255,0.02) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,0.02) 1px, transparent 1px);
+}
+
+.canvas-toolbar {
+  height: 44px;
+  padding: 0 14px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: var(--panel);
+  border-bottom: 1px solid var(--border);
+  z-index: 5;
+}
+.vp-tabs {
+  display: flex;
+  background: var(--panel-2);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 2px;
+  gap: 2px;
+}
+.vp-tab {
+  height: 26px;
+  padding: 0 11px;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--text-muted);
+  font-family: 'JetBrains Mono', monospace;
+}
+.vp-tab.active {
+  background: var(--panel);
+  color: var(--text);
+  box-shadow: var(--shadow-sm);
+}
+
+.canvas-toolbar .info {
+  font-size: 12px;
+  color: var(--text-muted);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.zoom-controls {
+  display: flex;
+  gap: 4px;
+  align-items: center;
+}
+.canvas-toolbar .topbar-spacer { flex: 1; }
+.info-badge {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  background: var(--accent-soft);
+  color: var(--accent-strong);
+  padding: 2px 7px;
+  border-radius: 3px;
+  font-weight: 500;
+}
+[data-theme="dark"] .info-badge {
+  background: rgba(199, 182, 149, 0.15);
+  color: var(--accent);
+}
+
+.canvas-scroll {
+  flex: 1;
+  overflow: auto;
+  padding: 28px;
+}
+.canvas-row {
+  display: flex;
+  gap: 32px;
+  align-items: flex-start;
+  justify-content: center;
+  min-width: min-content;
+}
+
+.viewport {
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
+}
+.viewport.hidden { display: none; }
+
+.vp-label {
+  background: var(--panel);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-bottom: none;
+  border-radius: 6px 6px 0 0;
+  padding: 7px 12px;
+  font-size: 11px;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-family: 'JetBrains Mono', monospace;
+}
+.vp-label .name { color: var(--accent-strong); font-weight: 600; }
+[data-theme="dark"] .vp-label .name { color: var(--accent); }
+
+.vp-frame {
+  background: var(--viewport-bg);
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow-lg);
+  overflow: hidden;
+  position: relative;
+  min-height: 200px;
+}
+
+/* viewport sizes — `zoom` shrinks the layout box (unlike transform:scale).
+   `--uz` is user zoom multiplier driven by Cmd+/-/0. */
+:root { --uz: 1; }
+.vp-desktop .vp-frame { width: 1440px; zoom: calc(0.42 * var(--uz)); }
+.vp-tablet  .vp-frame { width: 768px;  zoom: calc(0.55 * var(--uz)); }
+.vp-mobile  .vp-frame { width: 375px;  zoom: var(--uz); }
+
+.vp-desktop .vp-label { width: calc(1440px * 0.42 * var(--uz)); }
+.vp-tablet  .vp-label { width: calc(768px * 0.55 * var(--uz)); }
+.vp-mobile  .vp-label { width: calc(375px * var(--uz)); }
+
+/* spacebar pan cursor states */
+body.space-down .canvas-scroll { cursor: grab; }
+body.panning .canvas-scroll { cursor: grabbing; user-select: none; }
+body.space-down .canvas-scroll *, body.panning .canvas-scroll * { pointer-events: none !important; }
+
+/* ===== Sections (rendered inside viewports) ===== */
+.section {
+  position: relative;
+  font-family: 'Prompt', sans-serif;
+  color: #111;
+}
+.section.selected { outline: 3px solid #C7B695; outline-offset: -3px; z-index: 2; }
+.section:hover .sec-controls { opacity: 1; }
+
+.sec-controls {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  display: flex;
+  gap: 4px;
+  opacity: 0;
+  transition: opacity 0.15s;
+  z-index: 10;
+}
+.sec-ctrl-btn {
+  width: 28px;
+  height: 28px;
+  border-radius: 4px;
+  background: rgba(0,0,0,0.7);
+  color: #fff;
+  font-size: 14px;
+  display: grid;
+  place-items: center;
+  backdrop-filter: blur(4px);
+  transition: all 0.1s;
+}
+.sec-ctrl-btn:hover { background: #C7B695; }
+.sec-ctrl-btn.delete:hover { background: #AA182C; }
+
+/* drop indicator */
+.drop-indicator {
+  height: 4px;
+  background: #C7B695;
+  margin: 0;
+  display: none;
+  border-radius: 2px;
+}
+.drop-indicator.active { display: block; box-shadow: 0 0 8px #C7B695; }
+
+/* placeholder image */
+.ph {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  background-color: #f3f3f3;
+  background-image:
+    linear-gradient(45deg, #e8e8e8 25%, transparent 25%),
+    linear-gradient(-45deg, #e8e8e8 25%, transparent 25%),
+    linear-gradient(45deg, transparent 75%, #e8e8e8 75%),
+    linear-gradient(-45deg, transparent 75%, #e8e8e8 75%);
+  background-size: 16px 16px;
+  background-position: 0 0, 0 8px, 8px -8px, 8px 0px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  color: #555;
+  text-align: center;
+  cursor: pointer;
+  border: 1px dashed #c0c0c0;
+  overflow: hidden;
+  transition: all 0.15s;
+}
+.ph:hover { border-color: #C7B695; background-color: #fafafa; }
+.ph.has-image { background: #000; padding: 0; border: none; }
+.ph.dragover { border-color: #C7B695; background-color: #fff8e6; }
+.ph img { width: 100%; height: 100%; object-fit: cover; display: block; }
+
+.ph-name {
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: #666;
+  margin-bottom: 4px;
+}
+.ph-size {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 13px;
+  font-weight: 600;
+  color: #333;
+}
+.ph-meta {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px;
+  color: #888;
+  margin-top: 3px;
+}
+.ph-note {
+  font-size: 9px;
+  color: #999;
+  margin-top: 6px;
+  max-width: 80%;
+  line-height: 1.3;
+}
+.ph-hint {
+  position: absolute;
+  bottom: 8px;
+  right: 10px;
+  font-size: 9px;
+  color: #999;
+  font-family: 'JetBrains Mono', monospace;
+  letter-spacing: 0.3px;
+  opacity: 0;
+  transition: opacity 0.15s;
+}
+.ph:hover .ph-hint { opacity: 1; }
+.section.selected .ph:not(.has-image) { box-shadow: inset 0 0 0 1px #C7B695; }
+
+.vp-mobile .ph-meta, .vp-mobile .ph-note { display: none; }
+.vp-mobile .ph-name { font-size: 9px; }
+.vp-mobile .ph-size { font-size: 10px; }
+
+.ph-img-tools {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  display: flex;
+  gap: 4px;
+  opacity: 0;
+  transition: opacity 0.15s;
+  z-index: 4;
+}
+.ph:hover .ph-img-tools { opacity: 1; }
+.ph-img-btn {
+  width: 22px;
+  height: 22px;
+  border-radius: 4px;
+  background: rgba(0,0,0,0.75);
+  color: #fff;
+  font-size: 11px;
+  display: grid;
+  place-items: center;
+}
+.ph-img-btn:hover { background: #C7B695; }
+.ph-warn {
+  position: absolute;
+  bottom: 6px;
+  left: 6px;
+  background: #fef3c7;
+  color: #92400e;
+  font-size: 9px;
+  padding: 2px 6px;
+  border-radius: 3px;
+  font-family: 'JetBrains Mono', monospace;
+  z-index: 3;
+}
+.ph-fallback {
+  position: absolute;
+  top: 6px;
+  left: 6px;
+  background: rgba(0,0,0,0.6);
+  color: #fff;
+  font-size: 9px;
+  padding: 2px 6px;
+  border-radius: 3px;
+  font-family: 'JetBrains Mono', monospace;
+  z-index: 3;
+}
+
+/* Device tabs in inspector image card */
+.dev-tabs {
+  display: flex;
+  gap: 4px;
+  margin: 10px 0 8px;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 5px;
+  padding: 2px;
+}
+.dev-tab {
+  flex: 1;
+  height: 26px;
+  border-radius: 3px;
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--text-muted);
+  background: transparent;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  position: relative;
+  transition: all 0.15s;
+}
+.dev-tab:hover { color: var(--text); }
+.dev-tab.active {
+  background: var(--accent);
+  color: #fff;
+}
+.dev-dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: #10b981;
+  display: inline-block;
+}
+.dev-tab.active .dev-dot { background: #fff; }
+
+/* Ratio section */
+.ratio-section {
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px dashed var(--border);
+}
+.ratio-label {
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  color: var(--text-muted);
+  margin-bottom: 6px;
+}
+.ratio-preset {
+  width: 100%;
+  height: 28px;
+  padding: 0 8px;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  font-size: 11px;
+  color: var(--text);
+  font-family: inherit;
+  outline: none;
+  margin-bottom: 6px;
+  cursor: pointer;
+}
+.ratio-preset:focus { border-color: var(--accent); }
+.ratio-inputs {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  font-size: 11px;
+  color: var(--text-muted);
+}
+.ratio-inputs input {
+  flex: 1;
+  width: 0;
+  height: 28px;
+  padding: 0 8px;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  font-size: 11px;
+  font-family: 'JetBrains Mono', monospace;
+  color: var(--text);
+  outline: none;
+}
+.ratio-inputs input:focus { border-color: var(--accent); }
+.ratio-reset {
+  width: 28px;
+  height: 28px;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  background: var(--panel);
+  color: var(--text-muted);
+  font-size: 13px;
+}
+.ratio-reset:hover { border-color: var(--accent); color: var(--accent-strong); }
+
+/* ===== Inspector ===== */
+/* Inspector container: must be a flex column with constrained height
+   so .insp-body can scroll inside it */
+#inspector {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+.insp-empty {
+  flex: 1;
+  display: grid;
+  place-items: center;
+  text-align: center;
+  padding: 40px 24px;
+  color: var(--text-muted);
+  font-size: 12px;
+  line-height: 1.6;
+}
+
+.insp-body {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 16px;
+}
+
+.insp-section {
+  margin-bottom: 18px;
+}
+.insp-label {
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  color: var(--text-muted);
+  margin-bottom: 6px;
+}
+.insp-name {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text);
+  margin-bottom: 4px;
+}
+.insp-desc {
+  font-size: 12px;
+  color: var(--text-muted);
+  line-height: 1.5;
+  margin-bottom: 10px;
+}
+.insp-meta-row {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 12px;
+}
+.chip {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  background: var(--panel-2);
+  border: 1px solid var(--border);
+  color: var(--text);
+  padding: 3px 7px;
+  border-radius: 3px;
+}
+.chip.gold { background: var(--accent-soft); border-color: var(--accent); color: var(--accent-strong); }
+[data-theme="dark"] .chip.gold { background: rgba(199, 182, 149, 0.15); color: var(--accent); border-color: var(--accent-soft); }
+
+.image-card {
+  background: var(--panel-2);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 10px;
+  margin-bottom: 8px;
+}
+.image-card-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 6px;
+}
+.image-card-name {
+  font-size: 12px;
+  font-weight: 500;
+}
+.image-thumb {
+  width: 100%;
+  aspect-ratio: 16/9;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  margin: 8px 0;
+  overflow: hidden;
+  display: grid;
+  place-items: center;
+  color: var(--text-subtle);
+  font-size: 10px;
+}
+.image-thumb img { width: 100%; height: 100%; object-fit: cover; }
+.image-card-actions {
+  display: flex;
+  gap: 6px;
+  margin-top: 6px;
+}
+.image-card-actions button {
+  flex: 1;
+  height: 26px;
+  font-size: 11px;
+  border: 1px solid var(--border);
+  background: var(--panel);
+  color: var(--text);
+  border-radius: 4px;
+  transition: all 0.15s;
+}
+.image-card-actions button:hover { border-color: var(--accent); color: var(--accent-strong); }
+.image-card-actions button.danger:hover { border-color: var(--brand); color: var(--brand); }
+
+.image-note {
+  font-size: 11px;
+  color: var(--text-muted);
+  line-height: 1.5;
+  margin-top: 6px;
+  padding-top: 6px;
+  border-top: 1px dashed var(--border);
+}
+
+.text-field {
+  margin-bottom: 10px;
+}
+.text-field-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 4px;
+}
+.text-field-head label {
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--text-muted);
+}
+.text-reset {
+  width: 20px;
+  height: 20px;
+  border-radius: 3px;
+  background: transparent;
+  color: var(--text-muted);
+  font-size: 11px;
+  display: grid;
+  place-items: center;
+  border: 1px solid transparent;
+}
+.text-reset:hover { color: var(--accent-strong); border-color: var(--accent); background: var(--panel-2); }
+.text-input {
+  width: 100%;
+  padding: 7px 10px;
+  background: var(--panel-2);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  font-size: 12px;
+  color: var(--text);
+  font-family: inherit;
+  outline: none;
+  resize: vertical;
+  line-height: 1.5;
+}
+.text-input:focus { border-color: var(--accent); background: var(--panel); }
+
+.notes-block {
+  background: var(--panel-2);
+  border-left: 3px solid var(--accent);
+  padding: 10px 12px;
+  border-radius: 4px;
+  font-size: 12px;
+  color: var(--text);
+  line-height: 1.5;
+  white-space: pre-wrap;
+}
+
+.notes-input {
+  width: 100%;
+  min-height: 60px;
+  padding: 8px 10px;
+  background: var(--panel-2);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  font-size: 12px;
+  color: var(--text);
+  resize: vertical;
+  outline: none;
+  font-family: inherit;
+}
+.notes-input:focus { border-color: var(--accent); }
+
+/* ===== Modal ===== */
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.6);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+  backdrop-filter: blur(4px);
+}
+.modal-backdrop.active { display: flex; }
+.modal {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  width: min(640px, 90vw);
+  max-height: 80vh;
+  display: flex;
+  flex-direction: column;
+  box-shadow: var(--shadow-lg);
+}
+.modal-head {
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.modal-title { font-size: 14px; font-weight: 600; }
+.modal-body { padding: 16px 20px; overflow-y: auto; }
+.modal-foot {
+  padding: 12px 20px;
+  border-top: 1px solid var(--border);
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+}
+.modal textarea {
+  width: 100%;
+  min-height: 280px;
+  padding: 10px 12px;
+  background: var(--panel-2);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  color: var(--text);
+  resize: vertical;
+  outline: none;
+  line-height: 1.5;
+}
+.modal textarea:focus { border-color: var(--accent); }
+.modal .switch-row { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; font-size: 12px; }
+.format-tabs {
+  display: flex;
+  gap: 4px;
+  background: var(--panel-2);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 2px;
+  margin-bottom: 14px;
+}
+.fmt-tab {
+  flex: 1;
+  height: 30px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-muted);
+  background: transparent;
+  transition: all 0.15s;
+}
+.fmt-tab.active { background: var(--accent); color: #fff; }
+.fmt-tab:hover:not(.active) { color: var(--text); background: var(--panel); }
+.modal input[type="checkbox"] { accent-color: var(--accent); }
+
+/* ===== Welcome / Template modal ===== */
+.welcome-backdrop { z-index: 150; }
+.welcome-modal {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  width: min(900px, 92vw);
+  max-height: 88vh;
+  display: flex;
+  flex-direction: column;
+  box-shadow: var(--shadow-lg);
+}
+.welcome-head {
+  padding: 20px 24px 16px;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+.welcome-title { font-size: 20px; font-weight: 600; color: var(--text); margin-bottom: 4px; }
+.welcome-sub { font-size: 12px; color: var(--text-muted); }
+.welcome-tabs {
+  display: flex;
+  gap: 4px;
+  padding: 0 24px;
+  border-bottom: 1px solid var(--border);
+}
+.welcome-tab {
+  padding: 10px 14px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-muted);
+  background: transparent;
+  border-bottom: 2px solid transparent;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: -1px;
+  transition: color 0.15s;
+}
+.welcome-tab:hover { color: var(--text); }
+.welcome-tab.active { color: var(--accent-strong); border-bottom-color: var(--accent); }
+[data-theme="dark"] .welcome-tab.active { color: var(--accent); }
+.welcome-body {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 22px 24px;
+}
+.welcome-foot {
+  padding: 12px 24px;
+  border-top: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.tmpl-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 14px;
+}
+.tmpl-card {
+  border: 1px solid var(--border);
+  background: var(--panel);
+  border-radius: 8px;
+  overflow: hidden;
+  cursor: pointer;
+  transition: all 0.15s;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+}
+.tmpl-card:hover {
+  border-color: var(--accent);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow);
+}
+.tmpl-card-preview {
+  height: 140px;
+  background: var(--panel-2);
+  border-bottom: 1px solid var(--border);
+  padding: 8px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+}
+.tmpl-card-body { padding: 12px 14px; }
+.tmpl-card-name { font-size: 13px; font-weight: 600; color: var(--text); margin-bottom: 3px; }
+.tmpl-card-desc { font-size: 11px; color: var(--text-muted); line-height: 1.4; min-height: 30px; }
+.tmpl-card-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px dashed var(--border);
+}
+.tmpl-card-count {
+  font-size: 10px;
+  font-family: 'JetBrains Mono', monospace;
+  color: var(--accent-strong);
+  background: var(--accent-soft);
+  padding: 2px 6px;
+  border-radius: 3px;
+  font-weight: 500;
+}
+[data-theme="dark"] .tmpl-card-count { background: rgba(199,182,149,0.15); color: var(--accent); }
+.tmpl-card-delete {
+  font-size: 11px;
+  color: var(--text-subtle);
+  background: transparent;
+  padding: 2px 6px;
+  border-radius: 3px;
+  border: 1px solid transparent;
+}
+.tmpl-card-delete:hover { color: var(--brand); border-color: var(--brand); }
+
+/* Mini-preview shape rendering */
+.tmpl-mini { display: flex; flex-direction: column; gap: 2px; }
+.tmpl-mini-empty {
+  flex: 1;
+  display: grid;
+  place-items: center;
+  font-size: 32px;
+  color: var(--text-subtle);
+  font-weight: 200;
+}
+.mini-row {
+  background: #d4d4d4;
+  border-radius: 1px;
+  position: relative;
+  overflow: hidden;
+}
+[data-theme="dark"] .mini-row { background: #4a4d59; }
+.mini-row[data-shape="bar-thin"]    { height: 4px; background: #555; }
+[data-theme="dark"] .mini-row[data-shape="bar-thin"] { background: #888; }
+.mini-row[data-shape="bar-mid"]     { height: 12px; background: #c7b695; }
+.mini-row[data-shape="bar-tall"]    { height: 18px; background: #555; }
+[data-theme="dark"] .mini-row[data-shape="bar-tall"] { background: #888; }
+.mini-row[data-shape="bar-stats"]   { height: 8px; background:
+   repeating-linear-gradient(90deg, #c7b695 0 12px, transparent 12px 18px); }
+.mini-row[data-shape="image-tall"]  { height: 28px; background:
+   repeating-linear-gradient(45deg, #d4d4d4 0 4px, #c4c4c4 4px 8px); }
+[data-theme="dark"] .mini-row[data-shape="image-tall"] { background: repeating-linear-gradient(45deg, #4a4d59 0 4px, #3a3d49 4px 8px); }
+.mini-row[data-shape="image-tall-center"] { height: 28px; background:
+   repeating-linear-gradient(45deg, #d4d4d4 0 4px, #c4c4c4 4px 8px); position: relative; }
+.mini-row[data-shape="image-tall-center"]::after {
+  content: ''; position: absolute; left: 50%; top: 50%; width: 30%; height: 6px;
+  background: rgba(255,255,255,0.7); transform: translate(-50%, -50%); border-radius: 1px;
+}
+.mini-row[data-shape="image-mid"]   { height: 16px; background:
+   repeating-linear-gradient(45deg, #d4d4d4 0 4px, #c4c4c4 4px 8px); }
+[data-theme="dark"] .mini-row[data-shape="image-mid"] { background: repeating-linear-gradient(45deg, #4a4d59 0 4px, #3a3d49 4px 8px); }
+.mini-row[data-shape="split"]       { height: 24px; background:
+   linear-gradient(90deg, #e0e0e0 0 50%, #d4d4d4 50%); }
+.mini-row[data-shape="split-half"]  { height: 14px; background:
+   linear-gradient(90deg, #e0e0e0 0 50%, #d4d4d4 50%); }
+.mini-row[data-shape="grid-4"]      { height: 12px; background:
+   repeating-linear-gradient(90deg, #c4c4c4 0 18px, transparent 18px 22px); }
+.mini-row[data-shape="grid-3"]      { height: 14px; background:
+   repeating-linear-gradient(90deg, #c4c4c4 0 28px, transparent 28px 33px); }
+.mini-row[data-shape="grid-6"]      { height: 14px; background:
+   repeating-linear-gradient(90deg, #c4c4c4 0 12px, transparent 12px 15px); }
+.mini-row[data-shape="tall-3"]      { height: 22px; background:
+   repeating-linear-gradient(90deg, #c4c4c4 0 28px, transparent 28px 33px); }
+.mini-row[data-shape="cards-3"]     { height: 16px; background:
+   repeating-linear-gradient(90deg, #d4d4d4 0 28px, transparent 28px 33px), #fafafa; border: 1px solid #eee;}
+[data-theme="dark"] .mini-row[data-shape="cards-3"] { background: repeating-linear-gradient(90deg, #4a4d59 0 28px, transparent 28px 33px); border-color: #555; }
+.mini-row[data-shape="logos"]       { height: 6px; background:
+   repeating-linear-gradient(90deg, #999 0 14px, transparent 14px 20px); }
+.mini-row[data-shape="text"]        { height: 14px; background: transparent; border:1px dashed #bbb; }
+.mini-row[data-shape="lines"]       { height: 18px; background:
+   repeating-linear-gradient(180deg, #c4c4c4 0 2px, transparent 2px 6px); }
+.mini-row[data-shape="bento"]       { height: 22px; background:
+   linear-gradient(90deg, #c4c4c4 0 50%, transparent 50%),
+   linear-gradient(180deg, transparent 50%, #d4d4d4 50%); }
+.mini-row[data-shape="card-center"] { height: 22px; background: transparent; }
+.mini-row[data-shape="card-center"]::after {
+  content:''; display:block; width:50%; height:100%; margin:0 auto; background: #d4d4d4; border-radius: 2px;
+}
+.mini-row[data-shape="form"]        { height: 20px; background:
+   repeating-linear-gradient(180deg, #d4d4d4 0 4px, transparent 4px 7px); }
+.mini-row[data-shape="block"]       { height: 12px; }
+
+/* Page-type chip in topbar */
+.page-type-chip {
+  margin-left: 6px;
+  padding: 2px 8px;
+  border-radius: 10px;
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  background: var(--accent-soft);
+  color: var(--accent-strong);
+  border: 1px solid var(--accent);
+}
+[data-theme="dark"] .page-type-chip { background: rgba(199,182,149,0.15); color: var(--accent); }
+
+/* Library filter row */
+.lib-filter-row {
+  padding: 6px 12px;
+  border-bottom: 1px solid var(--border);
+  background: var(--panel-2);
+}
+.lib-item.dimmed { opacity: 0.4; }
+.lib-item.dimmed:hover { opacity: 0.85; }
+
+/* ===== Toast ===== */
+.toast-wrap {
+  position: fixed;
+  bottom: 28px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  align-items: center;
+  z-index: 200;
+  pointer-events: none;
+}
+.toast {
+  background: #111;
+  color: #fff;
+  padding: 10px 16px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 500;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.3);
+  animation: toast-in 0.25s ease;
+  border-left: 3px solid var(--accent);
+}
+.toast.error { border-left-color: var(--brand); }
+.toast.success { border-left-color: #10b981; }
+@keyframes toast-in { from { opacity: 0; transform: translateY(8px);} to { opacity: 1; transform: translateY(0);} }
+
+/* ===== Sample section styles ===== */
+.s-block { padding: 0; }
+.s-row { display: flex; gap: 16px; }
+.s-grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
+.s-grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+.s-grid-2 { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; }
+.s-pad { padding: 40px 60px; }
+.s-pad-md { padding: 24px 32px; }
+.s-pad-sm { padding: 16px 20px; }
+.s-h { font-size: 28px; font-weight: 700; margin-bottom: 8px; }
+.s-h-lg { font-size: 40px; font-weight: 700; margin-bottom: 12px; line-height: 1.15; }
+.s-p { font-size: 14px; color: #555; line-height: 1.5; }
+.s-btn { display:inline-block; background:#AA182C; color:#fff; padding:10px 22px; border-radius:4px; font-size:13px; font-weight:500; margin-top:10px; }
+.s-btn-outline { display:inline-block; border:1.5px solid #111; color:#111; padding:9px 20px; border-radius:4px; font-size:13px; font-weight:500; margin-top:10px; }
+.s-card { background: #fafafa; border: 1px solid #eee; border-radius: 6px; padding: 20px; }
+
+.s-text-center { text-align: center; }
+
+.scrollbar::-webkit-scrollbar { width: 8px; height: 8px; }
+.scrollbar::-webkit-scrollbar-track { background: transparent; }
+.scrollbar::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+.scrollbar::-webkit-scrollbar-thumb:hover { background: var(--border-strong); }
+
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="logo">
+    <div class="logo-mark">N</div>
+    <span>NGG Layout Builder</span>
+    <span class="page-type-chip" id="page-type-chip" style="display:none;"></span>
+  </div>
+  <div class="topbar-spacer"></div>
+
+  <button class="tb-btn" id="btn-undo" title="Undo (Cmd+Z)">↶</button>
+  <button class="tb-btn" id="btn-redo" title="Redo (Cmd+Shift+Z)">↷</button>
+
+  <button class="tb-btn primary" id="btn-new" title="New project / pick template">＋ <span data-i18n="new">New</span></button>
+  <button class="tb-btn danger" id="btn-reset" data-i18n="reset">Reset</button>
+  <button class="tb-btn" id="btn-import" data-i18n="import">Import</button>
+  <button class="tb-btn primary" id="btn-export" data-i18n="export">Export</button>
+
+  <div class="theme-toggle">
+    <button data-theme-set="light" title="Light">☀</button>
+    <button data-theme-set="dark" title="Dark">☾</button>
+  </div>
+
+  <div class="lang-toggle">
+    <button data-lang-set="en">EN</button>
+    <button data-lang-set="th">TH</button>
+  </div>
+</div>
+
+<div class="workspace">
+  <!-- LEFT: LIBRARY -->
+  <aside class="panel-left">
+    <div class="panel-header">
+      <span class="panel-title" data-i18n="library">Library</span>
+      <span class="mono" id="lib-count" style="font-size:10px;color:var(--text-subtle);"></span>
+    </div>
+    <div class="lib-search">
+      <input type="text" id="lib-search-input" data-i18n-ph="search" placeholder="Search sections...">
+    </div>
+    <div class="lib-tabs">
+      <button class="lib-tab active" data-cat="all" data-i18n="cat_all">All</button>
+      <button class="lib-tab" data-cat="ngg" data-i18n="cat_ngg">NGG</button>
+      <button class="lib-tab" data-cat="generic" data-i18n="cat_generic">Generic</button>
+    </div>
+    <div class="lib-filter-row" id="lib-filter-row" style="display:none;">
+      <label style="display:flex;align-items:center;gap:6px;font-size:11px;color:var(--text-muted);cursor:pointer;">
+        <input type="checkbox" id="pt-filter-toggle" checked>
+        <span data-i18n="filter_by_pt">Filter by page type</span>
+      </label>
+    </div>
+    <div class="lib-list scrollbar" id="lib-list"></div>
+  </aside>
+
+  <!-- CENTER: CANVAS -->
+  <div class="canvas-wrap">
+    <div class="canvas-toolbar">
+      <div class="vp-tabs">
+        <button class="vp-tab active" data-vp="all">ALL</button>
+        <button class="vp-tab" data-vp="desktop">1440</button>
+        <button class="vp-tab" data-vp="tablet">768</button>
+        <button class="vp-tab" data-vp="mobile">375</button>
+      </div>
+      <div class="info">
+        <span data-i18n="layout">Layout</span>
+        <span class="info-badge" id="layout-count">0 sections</span>
+      </div>
+      <div class="topbar-spacer"></div>
+      <div class="zoom-controls">
+        <button class="tb-btn icon-only" id="btn-zoom-out" title="Zoom out (⌘−)">−</button>
+        <button class="tb-btn" id="btn-zoom-reset" title="Fit (⌘0)" style="min-width:60px;font-family:'JetBrains Mono',monospace;">100%</button>
+        <button class="tb-btn icon-only" id="btn-zoom-in" title="Zoom in (⌘+)">+</button>
+      </div>
+      <span style="font-size:11px;color:var(--text-subtle);" data-i18n="hint_pan">Hold Space to pan</span>
+    </div>
+    <div class="canvas-scroll scrollbar" id="canvas-scroll">
+      <div class="canvas-row" id="canvas-row">
+        <div class="viewport vp-desktop" data-vp="desktop">
+          <div class="vp-label"><span class="name">Desktop</span><span>1440px</span></div>
+          <div class="vp-frame" id="vp-desktop"></div>
+        </div>
+        <div class="viewport vp-tablet" data-vp="tablet">
+          <div class="vp-label"><span class="name">Tablet</span><span>768px</span></div>
+          <div class="vp-frame" id="vp-tablet"></div>
+        </div>
+        <div class="viewport vp-mobile" data-vp="mobile">
+          <div class="vp-label"><span class="name">Mobile</span><span>375px</span></div>
+          <div class="vp-frame" id="vp-mobile"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- RIGHT: INSPECTOR -->
+  <aside class="panel-right">
+    <div class="panel-header">
+      <span class="panel-title" data-i18n="inspector">Inspector</span>
+    </div>
+    <div id="inspector"></div>
+  </aside>
+</div>
+
+<!-- Modal -->
+<div class="modal-backdrop" id="modal">
+  <div class="modal">
+    <div class="modal-head">
+      <div class="modal-title" id="modal-title">Export</div>
+      <button class="tb-btn icon-only" id="modal-close">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="format-tabs" id="format-tabs" style="display:none;">
+        <button class="fmt-tab active" data-fmt="json" data-i18n="export_json">JSON</button>
+        <button class="fmt-tab" data-fmt="image" data-i18n="export_image">Image (JPG)</button>
+      </div>
+
+      <div id="json-pane">
+        <div class="switch-row" id="modal-options" style="display:none;">
+          <label><input type="checkbox" id="opt-include-images" checked> <span data-i18n="opt_imgs">Include uploaded images</span></label>
+        </div>
+        <textarea id="modal-textarea" spellcheck="false"></textarea>
+      </div>
+
+      <div id="image-pane" style="display:none;">
+        <div class="switch-row">
+          <span style="font-size:12px;color:var(--text-muted);" data-i18n="select_viewport">Viewport</span>
+          <div class="vp-tabs" id="img-vp-tabs">
+            <button class="vp-tab active" data-imgvp="desktop">1440</button>
+            <button class="vp-tab" data-imgvp="tablet">768</button>
+            <button class="vp-tab" data-imgvp="mobile">375</button>
+          </div>
+        </div>
+        <div id="image-preview" style="margin-top:14px;border:1px solid var(--border);border-radius:6px;padding:14px;background:var(--panel-2);min-height:140px;display:flex;align-items:center;justify-content:center;">
+          <div style="font-size:12px;color:var(--text-muted);text-align:center;line-height:1.6;">
+            ⏬ Click <strong data-i18n="download">Download</strong> below to capture<br>
+            the selected viewport as a JPG image with watermark.
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="tb-btn" id="modal-copy" data-i18n="copy">Copy</button>
+      <button class="tb-btn primary" id="modal-action">Apply</button>
+    </div>
+  </div>
+</div>
+
+<!-- Welcome / Template-picker modal -->
+<div class="modal-backdrop welcome-backdrop" id="welcome-modal">
+  <div class="welcome-modal">
+    <div class="welcome-head">
+      <div>
+        <div class="welcome-title" data-i18n="welcome_title">Start a new project</div>
+        <div class="welcome-sub" data-i18n="welcome_sub">Pick a template or start from scratch</div>
+      </div>
+      <button class="tb-btn icon-only" id="welcome-close" title="Close">✕</button>
+    </div>
+    <div class="welcome-tabs">
+      <button class="welcome-tab active" data-pt="homepage">🏠 <span data-i18n="pt_homepage">Homepage</span></button>
+      <button class="welcome-tab" data-pt="landing">🎯 <span data-i18n="pt_landing">Landing Page</span></button>
+      <button class="welcome-tab" data-pt="custom">✨ <span data-i18n="pt_custom">Custom</span></button>
+    </div>
+    <div class="welcome-body scrollbar" id="welcome-body"></div>
+    <div class="welcome-foot">
+      <button class="tb-btn" id="welcome-save-current" title="Save current layout as a custom template" style="display:none;">
+        <span data-i18n="save_custom">Save current as template</span>
+      </button>
+      <span style="flex:1;"></span>
+      <span style="font-size:11px;color:var(--text-subtle);" data-i18n="welcome_hint">Click a template to apply</span>
+    </div>
+  </div>
+</div>
+
+<!-- Hidden file input for image upload -->
+<input type="file" id="img-input" accept="image/*" style="display:none;">
+
+<div class="toast-wrap" id="toast-wrap"></div>
+
+<script>
+/* ============================================================
+   I18N
+   ============================================================ */
+const I18N = {
+  en: {
+    subtitle: 'Homepage spec tool',
+    reset: 'Reset', import: 'Import', export: 'Export',
+    library: 'Library', inspector: 'Inspector', layout: 'Layout',
+    cat_all: 'All', cat_ngg: 'NGG', cat_generic: 'Generic',
+    search: 'Search sections...',
+    copy: 'Copy', apply: 'Apply',
+    opt_imgs: 'Include uploaded images',
+    section: 'Section', position: 'Position', images: 'Images',
+    notes_team: 'Notes for graphics team',
+    inspect_empty: 'Click any section in the canvas\nto see its specification.',
+    confirm_reset: 'Reset layout to default? Current work will be lost.',
+    toast_added: 'Section added',
+    toast_removed: 'Section removed',
+    toast_moved: 'Section moved',
+    toast_duplicated: 'Section duplicated',
+    toast_reset: 'Layout reset',
+    toast_exported: 'JSON copied to clipboard',
+    toast_imported: 'Layout imported',
+    toast_invalid: 'Invalid JSON',
+    toast_image_uploaded: 'Image uploaded',
+    toast_image_removed: 'Image removed',
+    toast_undo: 'Undone',
+    toast_redo: 'Redone',
+    toast_nothing_undo: 'Nothing to undo',
+    toast_nothing_redo: 'Nothing to redo',
+    upload: 'Upload',
+    replace: 'Replace',
+    remove: 'Remove',
+    no_image: 'No image',
+    no_images: 'No images required',
+    ratio_warn: 'Ratio mismatch',
+    add_note: 'Add custom note...',
+    empty_canvas: 'Drag a section from the library to start',
+    desktop: 'Desktop', tablet: 'Tablet', mobile: 'Mobile',
+    image_ratio: 'Image ratio',
+    preset_default: 'Default',
+    preset_custom: 'Custom',
+    custom_label: 'CUSTOM',
+    reset: 'Reset',
+    hint_pan: 'Hold Space to pan · ⌘+/− to zoom',
+    text_content: 'Text content',
+    no_text: 'No editable text',
+    export_format: 'Format',
+    export_json: 'JSON',
+    export_image: 'Image (JPG)',
+    download: 'Download',
+    select_viewport: 'Viewport',
+    toast_image_exported: 'Image downloaded',
+    hint_dblclick: '⇱ Double-click to upload',
+    new: 'New',
+    welcome_title: 'Start a new project',
+    welcome_sub: 'Pick a template or start from scratch',
+    welcome_hint: 'Click a template to apply',
+    pt_homepage: 'Homepage', pt_landing: 'Landing Page', pt_custom: 'Custom',
+    save_custom: 'Save current as template',
+    custom_templates: 'Your saved templates',
+    no_custom: 'No saved templates yet. Use "Save current as template" to add one.',
+    confirm_apply: 'Apply this template? Current work will be replaced.',
+    template_applied: 'Template applied',
+    template_saved: 'Template saved',
+    template_deleted: 'Template deleted',
+    template_name_prompt: 'Name this template:',
+    filter_by_pt: 'Match page type only',
+    sections_count: '{n} sections',
+  },
+  th: {
+    subtitle: 'เครื่องมือสเปคหน้าแรก',
+    reset: 'รีเซ็ต', import: 'นำเข้า', export: 'ส่งออก',
+    library: 'คลัง', inspector: 'รายละเอียด', layout: 'เลย์เอาต์',
+    cat_all: 'ทั้งหมด', cat_ngg: 'NGG', cat_generic: 'ทั่วไป',
+    search: 'ค้นหา section...',
+    copy: 'คัดลอก', apply: 'ใช้',
+    opt_imgs: 'รวมรูปภาพที่อัปโหลด',
+    section: 'Section', position: 'ตำแหน่ง', images: 'รูปภาพ',
+    notes_team: 'หมายเหตุสำหรับทีมกราฟิก',
+    inspect_empty: 'คลิกที่ section บน canvas\nเพื่อดูสเปค',
+    confirm_reset: 'รีเซ็ตเลย์เอาต์เป็นค่าเริ่มต้น? งานที่ทำอยู่จะหายไป',
+    toast_added: 'เพิ่ม section แล้ว',
+    toast_removed: 'ลบ section แล้ว',
+    toast_moved: 'ย้าย section แล้ว',
+    toast_duplicated: 'คัดลอก section แล้ว',
+    toast_reset: 'รีเซ็ตเลย์เอาต์แล้ว',
+    toast_exported: 'คัดลอก JSON ไปยังคลิปบอร์ดแล้ว',
+    toast_imported: 'นำเข้าเลย์เอาต์แล้ว',
+    toast_invalid: 'JSON ไม่ถูกต้อง',
+    toast_image_uploaded: 'อัปโหลดรูปแล้ว',
+    toast_image_removed: 'ลบรูปแล้ว',
+    toast_undo: 'ย้อนกลับแล้ว',
+    toast_redo: 'ทำซ้ำแล้ว',
+    toast_nothing_undo: 'ไม่มีอะไรให้ย้อนกลับ',
+    toast_nothing_redo: 'ไม่มีอะไรให้ทำซ้ำ',
+    upload: 'อัปโหลด',
+    replace: 'เปลี่ยน',
+    remove: 'ลบ',
+    no_image: 'ยังไม่มีรูป',
+    no_images: 'ไม่ต้องใช้รูป',
+    ratio_warn: 'สัดส่วนไม่ตรง',
+    add_note: 'เพิ่มหมายเหตุ...',
+    empty_canvas: 'ลาก section จากคลังด้านซ้ายมาเริ่มต้น',
+    desktop: 'Desktop', tablet: 'Tablet', mobile: 'Mobile',
+    image_ratio: 'สัดส่วนรูป',
+    preset_default: 'ค่าเริ่มต้น',
+    preset_custom: 'กำหนดเอง',
+    custom_label: 'CUSTOM',
+    reset: 'รีเซ็ต',
+    hint_pan: 'กด Space เพื่อลาก · ⌘+/− ซูม',
+    text_content: 'ข้อความ',
+    no_text: 'ไม่มีข้อความที่แก้ได้',
+    export_format: 'รูปแบบ',
+    export_json: 'JSON',
+    export_image: 'รูปภาพ (JPG)',
+    download: 'ดาวน์โหลด',
+    select_viewport: 'เลือก viewport',
+    toast_image_exported: 'ดาวน์โหลดรูปแล้ว',
+    hint_dblclick: '⇱ ดับเบิลคลิกเพื่ออัปโหลด',
+    new: 'ใหม่',
+    welcome_title: 'เริ่มโปรเจกต์ใหม่',
+    welcome_sub: 'เลือก template หรือเริ่มจากศูนย์',
+    welcome_hint: 'คลิกที่ template เพื่อใช้งาน',
+    pt_homepage: 'หน้าแรก', pt_landing: 'แลนดิ้งเพจ', pt_custom: 'กำหนดเอง',
+    save_custom: 'บันทึก layout ปัจจุบันเป็น template',
+    custom_templates: 'Template ที่บันทึกไว้',
+    no_custom: 'ยังไม่มี template ที่บันทึกไว้ ใช้ "บันทึก layout ปัจจุบัน" เพื่อสร้าง',
+    confirm_apply: 'ใช้ template นี้? งานปัจจุบันจะถูกแทนที่',
+    template_applied: 'ใช้ template แล้ว',
+    template_saved: 'บันทึก template แล้ว',
+    template_deleted: 'ลบ template แล้ว',
+    template_name_prompt: 'ตั้งชื่อ template:',
+    filter_by_pt: 'แสดงเฉพาะที่เข้ากับ page type',
+    sections_count: '{n} sections',
+  }
+};
+
+/* ============================================================
+   SECTION DEFINITIONS
+   ============================================================ */
+function img(name, w, h, format, note_en, note_th) {
+  return { name, w, h, format: format || 'JPG/WebP', note_en: note_en || '', note_th: note_th || '' };
+}
+
+const SECTIONS = {
+  /* ----------- NGG SECTIONS ----------- */
+  header: {
+    cat: 'ngg',
+    name: { en: 'Site Header', th: 'หัวเว็บไซต์' },
+    desc: { en: 'Top navigation bar with logo and menu', th: 'แถบนำทางด้านบนพร้อมโลโก้และเมนู' },
+    images: [],
+    notes: { en: 'Sticky on scroll. Logo left, menu center, account/cart right.', th: 'ติดด้านบนเมื่อเลื่อน โลโก้ซ้าย เมนูกลาง บัญชี/ตะกร้าขวา' },
+    render: (vp) => {
+      const isM = vp === 'mobile';
+      return `<div class="s-block" style="background:#fff;border-bottom:1px solid #eee;padding:${isM?'12px 16px':'16px 60px'};display:flex;align-items:center;justify-content:space-between;">
+        <div style="font-weight:700;font-size:${isM?14:18}px;letter-spacing:1px;color:#AA182C;">NGG</div>
+        ${isM ? '<div style="font-size:18px;">☰</div>' :
+          '<div style="display:flex;gap:24px;font-size:13px;color:#333;"><span>Shop</span><span>Brands</span><span>Promotion</span><span>About</span><span>Contact</span></div>'}
+        <div style="display:flex;gap:14px;font-size:14px;">🔍 ${isM?'':'❤ '}🛒</div>
+      </div>`;
+    }
+  },
+
+  hero: {
+    cat: 'ngg',
+    name: { en: 'Hero Banner', th: 'แบนเนอร์หลัก' },
+    desc: { en: 'Full-width hero banner above the fold', th: 'แบนเนอร์หลักเต็มความกว้างด้านบน' },
+    images: [ img('Hero', 1440, 500, 'JPG/WebP', 'Main campaign visual', 'ภาพแคมเปญหลัก') ],
+    notes: { en: 'Auto-rotate carousel optional. Text overlay on left side.', th: 'อาจทำเป็น carousel หมุนอัตโนมัติ ข้อความซ้อนด้านซ้าย' },
+    render: (vp, sec, lang) => {
+      return `<div class="s-block">${phEl(sec, 0, lang, vp)}</div>`;
+    }
+  },
+
+  hero_centered: {
+    cat: 'ngg',
+    name: { en: 'Hero (Centered)', th: 'Hero (กึ่งกลาง)' },
+    desc: { en: 'Hero variant with centered text & CTA', th: 'Hero แบบข้อความและปุ่มกึ่งกลาง' },
+    images: [ img('Hero BG', 1440, 600, 'JPG/WebP', 'Background image, dark overlay applied', 'ภาพพื้นหลัง มี overlay สีดำทับ') ],
+    texts: {
+      title:    { label: { en: 'Title', th: 'หัวข้อ' },         default: { en: 'Discover Excellence', th: 'ค้นพบความเป็นเลิศ' } },
+      subtitle: { label: { en: 'Subtitle', th: 'คำบรรยาย' },    default: { en: 'Crafted for moments that matter', th: 'สร้างสรรค์เพื่อช่วงเวลาสำคัญ' } },
+      btn:      { label: { en: 'Button', th: 'ปุ่ม' },           default: { en: 'Shop Collection', th: 'ดูคอลเลกชัน' } },
+    },
+    notes: { en: 'Background must allow white text overlay (dark or apply scrim).', th: 'พื้นหลังต้องรองรับการวางตัวอักษรสีขาว (เข้มหรือใช้ scrim)' },
+    render: (vp, sec, lang) => {
+      return `<div class="s-block" style="position:relative;">
+        ${phEl(sec, 0, lang, vp)}
+        <div style="position:absolute;inset:0;background:rgba(0,0,0,0.35);display:flex;flex-direction:column;align-items:center;justify-content:center;color:#fff;text-align:center;padding:0 20px;pointer-events:none;">
+          <div style="font-size:${vp==='mobile'?22:36}px;font-weight:700;margin-bottom:8px;">${etxt(sec,'title')}</div>
+          <div style="font-size:${vp==='mobile'?12:14}px;opacity:0.9;margin-bottom:18px;">${etxt(sec,'subtitle')}</div>
+          <div class="s-btn" style="background:#C7B695;">${etxt(sec,'btn')}</div>
+        </div>
+      </div>`;
+    }
+  },
+
+  hero_split: {
+    cat: 'ngg',
+    name: { en: 'Hero (Split)', th: 'Hero (แยก 2 ฝั่ง)' },
+    desc: { en: 'Hero variant with text left, image right', th: 'Hero ข้อความซ้าย ภาพขวา' },
+    images: [ img('Hero Right', 720, 600, 'JPG/WebP', 'Square or portrait product/lifestyle', 'รูปสินค้า/ไลฟ์สไตล์ จัตุรัสหรือแนวตั้ง') ],
+    texts: {
+      title:    { label: { en: 'Title', th: 'หัวข้อ' },        default: { en: 'Timeless Elegance', th: 'ความงามเหนือกาลเวลา' } },
+      subtitle: { label: { en: 'Subtitle', th: 'คำบรรยาย' },   default: { en: 'Discover our newest collection of fine jewelry crafted with passion.', th: 'สำรวจคอลเลกชันเครื่องประดับชุดใหม่ที่สร้างสรรค์ด้วยใจ' } },
+      btn:      { label: { en: 'Button', th: 'ปุ่ม' },          default: { en: 'Explore Collection', th: 'ดูคอลเลกชัน' } },
+    },
+    notes: { en: 'Stacks vertically on mobile, image first.', th: 'บนมือถือเรียงแนวตั้ง รูปอยู่บน' },
+    render: (vp, sec, lang) => {
+      if (vp === 'mobile') {
+        return `<div class="s-block">
+          ${phEl(sec, 0, lang, vp)}
+          <div style="padding:24px 20px;text-align:center;">
+            <div class="s-h-lg" style="font-size:24px;">${etxt(sec,'title')}</div>
+            <div class="s-p">${etxt(sec,'subtitle')}</div>
+            <div class="s-btn">${etxt(sec,'btn')}</div>
+          </div>
+        </div>`;
+      }
+      return `<div class="s-block" style="display:grid;grid-template-columns:1fr 1fr;align-items:stretch;">
+        <div style="padding:${vp==='tablet'?'40px':'60px'};display:flex;flex-direction:column;justify-content:center;background:#fafafa;">
+          <div class="s-h-lg">${etxt(sec,'title')}</div>
+          <div class="s-p">${etxt(sec,'subtitle')}</div>
+          <div class="s-btn">${etxt(sec,'btn')}</div>
+        </div>
+        <div>${phEl(sec, 0, lang, vp)}</div>
+      </div>`;
+    }
+  },
+
+  sub_banner: {
+    cat: 'ngg',
+    name: { en: 'Sub Banner', th: 'แบนเนอร์รอง' },
+    desc: { en: 'Secondary banner below hero', th: 'แบนเนอร์รองใต้ Hero' },
+    images: [ img('Sub Banner', 1200, 500, 'JPG/WebP', 'Promo or seasonal banner', 'แบนเนอร์โปรโมชั่นหรือเทศกาล') ],
+    notes: { en: 'Centered, max-width 1200px. Margin top 40px.', th: 'จัดกึ่งกลาง สูงสุด 1200px เว้นด้านบน 40px' },
+    render: (vp, sec, lang) => {
+      return `<div class="s-block" style="padding:${vp==='mobile'?'24px 16px':'40px 60px'};"><div style="border-radius:6px;overflow:hidden;">${phEl(sec, 0, lang, vp)}</div></div>`;
+    }
+  },
+
+  product_grid_4: {
+    cat: 'ngg',
+    name: { en: 'Product Grid (4-col)', th: 'ตารางสินค้า 4 คอลัมน์' },
+    desc: { en: 'Featured products in 4-column grid', th: 'สินค้าแนะนำในตาราง 4 คอลัมน์' },
+    images: Array.from({length:4}, (_,i)=>img(`Product ${i+1}`, 262, 262, 'JPG/WebP', 'Product on white background', 'สินค้าบนพื้นขาว')),
+    texts: {
+      heading: { label: { en: 'Heading', th: 'หัวเรื่อง' }, default: { en: 'Featured Products', th: 'สินค้าแนะนำ' } },
+    },
+    notes: { en: 'Stack 2-col tablet, 1-col mobile. Square 1:1 ratio.', th: '2 คอลัมน์บนแท็บเล็ต 1 คอลัมน์บนมือถือ สัดส่วน 1:1' },
+    render: (vp, sec, lang) => {
+      const cols = vp === 'mobile' ? 1 : (vp === 'tablet' ? 2 : 4);
+      const items = sec.images.map((im,i) => `
+        <div>
+          <div>${phEl(sec, i, lang, vp)}</div>
+          <div style="padding:10px 4px;">
+            <div style="font-size:13px;font-weight:500;margin-bottom:4px;">Product Name</div>
+            <div style="font-size:12px;color:#AA182C;font-weight:600;">฿ 12,500</div>
+          </div>
+        </div>`).join('');
+      return `<div class="s-block" style="padding:${vp==='mobile'?'24px 16px':'40px 60px'};">
+        <h2 class="s-h s-text-center" style="margin-bottom:24px;">${etxt(sec,'heading')}</h2>
+        <div style="display:grid;grid-template-columns:repeat(${cols},1fr);gap:${vp==='mobile'?12:16}px;">${items}</div>
+      </div>`;
+    }
+  },
+
+  promo_split: {
+    cat: 'ngg',
+    name: { en: 'Promo Split (2-col)', th: 'โปรโมชั่นแยก 2 คอลัมน์' },
+    desc: { en: 'Two side-by-side promo banners', th: 'แบนเนอร์โปรโมชั่น 2 ฝั่ง' },
+    images: [
+      img('Promo Left', 584, 320, 'JPG/WebP', 'Left campaign visual', 'แคมเปญซ้าย'),
+      img('Promo Right', 584, 320, 'JPG/WebP', 'Right campaign visual', 'แคมเปญขวา')
+    ],
+    notes: { en: 'Stacks vertically on mobile.', th: 'เรียงแนวตั้งบนมือถือ' },
+    render: (vp, sec, lang) => {
+      const cols = vp === 'mobile' ? 1 : 2;
+      return `<div class="s-block" style="padding:${vp==='mobile'?'16px':'24px 60px'};">
+        <div style="display:grid;grid-template-columns:repeat(${cols},1fr);gap:16px;">
+          ${sec.images.map((im,i)=>`<div style="border-radius:6px;overflow:hidden;">${phEl(sec, i, lang, vp)}</div>`).join('')}
+        </div>
+      </div>`;
+    }
+  },
+
+  promo_text_split: {
+    cat: 'ngg',
+    name: { en: 'Image + Text', th: 'รูป + ข้อความ' },
+    desc: { en: 'Image on one side, text on the other', th: 'รูปด้านหนึ่ง ข้อความอีกด้าน' },
+    images: [ img('Feature', 584, 320, 'JPG/WebP', 'Feature visual', 'รูปประกอบ') ],
+    texts: {
+      title: { label: { en: 'Title', th: 'หัวข้อ' }, default: { en: 'Our Heritage', th: 'มรดกของเรา' } },
+      body:  { label: { en: 'Body', th: 'เนื้อหา' }, default: { en: 'Crafting timeless pieces for over 50 years with dedication, artistry, and an unwavering commitment to quality.', th: 'รังสรรค์ผลงานเหนือกาลเวลามากว่า 50 ปี ด้วยความทุ่มเท ศิลปะ และความมุ่งมั่นในคุณภาพ' } },
+      btn:   { label: { en: 'Button', th: 'ปุ่ม' },  default: { en: 'Learn more', th: 'อ่านต่อ' } },
+    },
+    notes: { en: 'Alternate L/R layout in flow. Stacks on mobile.', th: 'สลับซ้าย/ขวาในแต่ละ section บนมือถือเรียงแนวตั้ง' },
+    render: (vp, sec, lang) => {
+      if (vp === 'mobile') {
+        return `<div class="s-block" style="padding:24px 16px;">
+          <div style="border-radius:6px;overflow:hidden;margin-bottom:16px;">${phEl(sec, 0, lang, vp)}</div>
+          <h3 class="s-h" style="font-size:20px;">${etxt(sec,'title')}</h3>
+          <p class="s-p">${etxt(sec,'body')}</p>
+          <div class="s-btn-outline">${etxt(sec,'btn')}</div>
+        </div>`;
+      }
+      return `<div class="s-block" style="padding:40px 60px;display:grid;grid-template-columns:1fr 1fr;gap:32px;align-items:center;">
+        <div style="border-radius:6px;overflow:hidden;">${phEl(sec, 0, lang, vp)}</div>
+        <div>
+          <h3 class="s-h">${etxt(sec,'title')}</h3>
+          <p class="s-p">${etxt(sec,'body')}</p>
+          <div class="s-btn-outline">${etxt(sec,'btn')}</div>
+        </div>
+      </div>`;
+    }
+  },
+
+  square_grid_3: {
+    cat: 'ngg',
+    name: { en: 'Square Grid (3-col)', th: 'ตารางจัตุรัส 3 คอลัมน์' },
+    desc: { en: 'Three square category tiles', th: 'ไทล์หมวดหมู่จัตุรัส 3 ใบ' },
+    images: Array.from({length:3}, (_,i)=>img(`Category ${i+1}`, 345, 345, 'JPG/WebP', 'Category cover with overlay text', 'ภาพปกหมวด มี overlay ข้อความ')),
+    notes: { en: 'Hover scale 1.02. Title overlaid bottom-left.', th: 'hover ขยาย 1.02 ชื่อหมวดวางด้านล่างซ้าย' },
+    render: (vp, sec, lang) => {
+      const cols = vp === 'mobile' ? 1 : 3;
+      return `<div class="s-block" style="padding:${vp==='mobile'?'24px 16px':'40px 60px'};">
+        <div style="display:grid;grid-template-columns:repeat(${cols},1fr);gap:16px;">
+          ${sec.images.map((im,i)=>`<div style="border-radius:6px;overflow:hidden;">${phEl(sec, i, lang, vp)}</div>`).join('')}
+        </div>
+      </div>`;
+    }
+  },
+
+  feature_image_text: {
+    cat: 'ngg',
+    name: { en: 'Feature + Text', th: 'รูปฟีเจอร์ + ข้อความ' },
+    desc: { en: 'Large feature image paired with text', th: 'รูปฟีเจอร์ขนาดใหญ่คู่กับข้อความ' },
+    images: [ img('Feature', 637, 412, 'JPG/WebP', '1.55:1 ratio image', 'ภาพสัดส่วน 1.55:1') ],
+    texts: {
+      title: { label: { en: 'Title', th: 'หัวข้อ' }, default: { en: 'Master Craftsmanship', th: 'งานฝีมือชั้นเลิศ' } },
+      body:  { label: { en: 'Body', th: 'เนื้อหา' }, default: { en: 'Each piece tells a story of dedication, where master artisans bring decades of expertise to every creation.', th: 'แต่ละชิ้นเล่าเรื่องของความทุ่มเท ที่ช่างฝีมือถ่ายทอดประสบการณ์หลายสิบปีลงในทุกผลงาน' } },
+      btn:   { label: { en: 'Button', th: 'ปุ่ม' },  default: { en: 'Discover the process', th: 'ดูกระบวนการ' } },
+    },
+    notes: { en: 'Used for storytelling sections.', th: 'ใช้ในส่วนเล่าเรื่องแบรนด์' },
+    render: (vp, sec, lang) => {
+      if (vp === 'mobile') {
+        return `<div class="s-block" style="padding:24px 16px;">
+          <div style="border-radius:6px;overflow:hidden;margin-bottom:16px;">${phEl(sec, 0, lang, vp)}</div>
+          <h3 class="s-h" style="font-size:20px;">${etxt(sec,'title')}</h3>
+          <p class="s-p">${etxt(sec,'body')}</p>
+        </div>`;
+      }
+      return `<div class="s-block" style="padding:40px 60px;display:grid;grid-template-columns:1.2fr 1fr;gap:40px;align-items:center;">
+        <div style="border-radius:6px;overflow:hidden;">${phEl(sec, 0, lang, vp)}</div>
+        <div>
+          <h3 class="s-h">${etxt(sec,'title')}</h3>
+          <p class="s-p">${etxt(sec,'body')}</p>
+          <div class="s-btn-outline">${etxt(sec,'btn')}</div>
+        </div>
+      </div>`;
+    }
+  },
+
+  logo_strip: {
+    cat: 'ngg',
+    name: { en: 'Sub-brand Logo Strip', th: 'แถบโลโก้แบรนด์ย่อย' },
+    desc: { en: 'Horizontal strip of brand logos', th: 'แถบโลโก้แบรนด์แนวนอน' },
+    images: Array.from({length:6}, (_,i)=>img(`Logo ${i+1}`, 120, 40, 'PNG/SVG', 'Transparent BG, max-height 40px', 'พื้นหลังโปร่ง สูงไม่เกิน 40px')),
+    notes: { en: 'Center-aligned. Use grayscale on idle, color on hover.', th: 'จัดกึ่งกลาง โลโก้ขาวดำตอนปกติ สีตอน hover' },
+    render: (vp, sec, lang) => {
+      const cols = vp === 'mobile' ? 3 : 6;
+      return `<div class="s-block" style="padding:${vp==='mobile'?'24px 16px':'32px 60px'};background:#fafafa;">
+        <div style="display:grid;grid-template-columns:repeat(${cols},1fr);gap:24px;align-items:center;">
+          ${sec.images.map((im,i)=>`<div>${phEl(sec, i, lang, vp)}</div>`).join('')}
+        </div>
+      </div>`;
+    }
+  },
+
+  tall_grid_3: {
+    cat: 'ngg',
+    name: { en: 'Tall Cards (3-col)', th: 'การ์ดสูง 3 คอลัมน์' },
+    desc: { en: 'Three tall portrait cards', th: 'การ์ดแนวตั้งสูง 3 ใบ' },
+    images: Array.from({length:3}, (_,i)=>img(`Card ${i+1}`, 386, 580, 'JPG/WebP', 'Portrait 1:1.5 ratio', 'แนวตั้ง 1:1.5')),
+    notes: { en: 'Editorial style cards. Stack on mobile.', th: 'การ์ดสไตล์นิตยสาร เรียงบนมือถือ' },
+    render: (vp, sec, lang) => {
+      const cols = vp === 'mobile' ? 1 : 3;
+      return `<div class="s-block" style="padding:${vp==='mobile'?'24px 16px':'40px 60px'};">
+        <div style="display:grid;grid-template-columns:repeat(${cols},1fr);gap:16px;">
+          ${sec.images.map((im,i)=>`<div style="border-radius:6px;overflow:hidden;">${phEl(sec, i, lang, vp)}</div>`).join('')}
+        </div>
+      </div>`;
+    }
+  },
+
+  feature_grid_3: {
+    cat: 'ngg',
+    name: { en: 'Feature Cards (3-col)', th: 'การ์ดฟีเจอร์ 3 คอลัมน์' },
+    desc: { en: 'Three landscape feature cards', th: 'การ์ดแนวนอน 3 ใบ' },
+    images: Array.from({length:3}, (_,i)=>img(`Feature ${i+1}`, 367, 275, 'JPG/WebP', '1.33:1 ratio', 'สัดส่วน 1.33:1')),
+    notes: { en: 'Each card has title + short description below.', th: 'การ์ดมีชื่อและคำอธิบายสั้นด้านล่าง' },
+    render: (vp, sec, lang) => {
+      const cols = vp === 'mobile' ? 1 : 3;
+      const items = sec.images.map((im,i)=>`
+        <div>
+          <div style="border-radius:6px;overflow:hidden;margin-bottom:12px;">${phEl(sec, i, lang, vp)}</div>
+          <div style="font-size:14px;font-weight:600;margin-bottom:4px;">Feature Title ${i+1}</div>
+          <div style="font-size:12px;color:#666;line-height:1.5;">Short description of the feature.</div>
+        </div>`).join('');
+      return `<div class="s-block" style="padding:${vp==='mobile'?'24px 16px':'40px 60px'};">
+        <div style="display:grid;grid-template-columns:repeat(${cols},1fr);gap:24px;">${items}</div>
+      </div>`;
+    }
+  },
+
+  text_section: {
+    cat: 'ngg',
+    name: { en: 'Text Block', th: 'บล็อกข้อความ' },
+    desc: { en: 'Plain text section with heading', th: 'ส่วนข้อความล้วนพร้อมหัวข้อ' },
+    images: [],
+    texts: {
+      heading: { label: { en: 'Heading', th: 'หัวเรื่อง' }, default: { en: 'Crafted with Passion', th: 'สร้างสรรค์ด้วยใจ' } },
+      body:    { label: { en: 'Body',    th: 'เนื้อหา' },  default: { en: 'Every piece in our collection is a testament to timeless artistry, passed down through generations of master craftsmen who pour their soul into each creation.', th: 'ทุกชิ้นในคอลเลกชันของเราคือบทพิสูจน์ของศิลปะเหนือกาลเวลา สืบทอดจากรุ่นสู่รุ่นของช่างฝีมือที่ทุ่มเทจิตวิญญาณลงในทุกผลงาน' } },
+    },
+    notes: { en: 'Max-width 720px, centered.', th: 'กว้างสูงสุด 720px จัดกึ่งกลาง' },
+    render: (vp, sec) => {
+      return `<div class="s-block s-text-center" style="padding:${vp==='mobile'?'40px 24px':'60px 60px'};">
+        <h2 class="s-h" style="margin-bottom:16px;">${etxt(sec,'heading')}</h2>
+        <p class="s-p" style="max-width:720px;margin:0 auto;">${etxt(sec,'body')}</p>
+      </div>`;
+    }
+  },
+
+  footer: {
+    cat: 'ngg',
+    name: { en: 'Site Footer', th: 'ส่วนท้ายเว็บไซต์' },
+    desc: { en: 'Footer with links, social, payment icons', th: 'ส่วนท้าย พร้อมลิงก์ โซเชียล ไอคอนการชำระเงิน' },
+    images: [ img('Payment Icons', 240, 32, 'PNG/SVG', 'Visa, Mastercard, etc.', 'Visa, Mastercard ฯลฯ') ],
+    notes: { en: 'Dark background. 4 columns on desktop.', th: 'พื้นหลังเข้ม 4 คอลัมน์บน desktop' },
+    render: (vp, sec, lang) => {
+      const cols = vp === 'mobile' ? 1 : (vp === 'tablet' ? 2 : 4);
+      return `<div class="s-block" style="background:#1A1A1A;color:#fff;padding:${vp==='mobile'?'32px 20px':'48px 60px 24px'};">
+        <div style="display:grid;grid-template-columns:repeat(${cols},1fr);gap:32px;margin-bottom:32px;">
+          ${['Shop','Customer Care','Company','Connect'].map(t=>`
+            <div>
+              <div style="font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:1px;margin-bottom:12px;color:#C7B695;">${t}</div>
+              <div style="font-size:12px;line-height:2;color:#aaa;">Link 1<br>Link 2<br>Link 3<br>Link 4</div>
+            </div>`).join('')}
+        </div>
+        <div style="border-top:1px solid #333;padding-top:20px;display:flex;justify-content:space-between;flex-wrap:wrap;gap:12px;align-items:center;">
+          <div style="font-size:11px;color:#888;">© NGG Jewellery</div>
+          <div style="height:32px;width:160px;">${phEl(sec, 0, lang, vp)}</div>
+        </div>
+      </div>`;
+    }
+  },
+
+  /* ----------- GENERIC PATTERNS ----------- */
+  nav_bar: {
+    cat: 'generic',
+    name: { en: 'Nav Bar', th: 'แถบเมนู' },
+    desc: { en: 'Horizontal navigation bar', th: 'แถบเมนูแนวนอน' },
+    images: [],
+    notes: { en: 'VibeUI-style minimal nav.', th: 'เมนูสไตล์ minimal' },
+    render: (vp) => `<div class="s-block" style="padding:${vp==='mobile'?'14px 16px':'18px 60px'};display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid #eee;">
+      <div style="font-weight:700;font-size:16px;">Brand</div>
+      ${vp==='mobile'?'<div>☰</div>':'<div style="display:flex;gap:24px;font-size:13px;color:#555;"><span>Home</span><span>Features</span><span>Pricing</span><span>About</span></div>'}
+      <div class="s-btn" style="margin:0;font-size:12px;padding:6px 14px;">Sign in</div>
+    </div>`
+  },
+
+  auth_form: {
+    cat: 'generic',
+    name: { en: 'Auth Form', th: 'ฟอร์มล็อกอิน' },
+    desc: { en: 'Login/signup form, centered card', th: 'ฟอร์มล็อกอิน/สมัครสมาชิก การ์ดกึ่งกลาง' },
+    images: [],
+    notes: { en: 'Email + password fields, social login optional.', th: 'อีเมล + รหัสผ่าน อาจมี social login' },
+    render: (vp) => `<div class="s-block" style="padding:${vp==='mobile'?'40px 16px':'60px'};background:#fafafa;display:grid;place-items:center;">
+      <div style="background:#fff;border:1px solid #eee;border-radius:8px;padding:32px;width:100%;max-width:400px;">
+        <h3 style="font-size:22px;font-weight:600;margin-bottom:6px;">Welcome back</h3>
+        <p style="font-size:13px;color:#666;margin-bottom:20px;">Sign in to your account</p>
+        ${['Email','Password'].map(l=>`<div style="margin-bottom:12px;"><div style="font-size:12px;color:#666;margin-bottom:4px;">${l}</div><div style="height:38px;border:1px solid #ddd;border-radius:4px;background:#fafafa;"></div></div>`).join('')}
+        <div class="s-btn" style="width:100%;text-align:center;margin-top:8px;">Sign in</div>
+      </div>
+    </div>`
+  },
+
+  pricing_3tier: {
+    cat: 'generic',
+    name: { en: 'Pricing (3-tier)', th: 'ราคา 3 ระดับ' },
+    desc: { en: 'Three pricing tiers side by side', th: 'แพ็กเกจราคา 3 ระดับ' },
+    images: [],
+    notes: { en: 'Middle tier highlighted as recommended.', th: 'แพ็กเกจกลางเน้นเป็น recommended' },
+    render: (vp) => {
+      const cols = vp === 'mobile' ? 1 : 3;
+      const tiers = ['Starter','Pro','Enterprise'];
+      const prices = ['฿299','฿599','฿1,299'];
+      return `<div class="s-block" style="padding:${vp==='mobile'?'40px 16px':'60px'};text-align:center;">
+        <h2 class="s-h" style="margin-bottom:8px;">Simple Pricing</h2>
+        <p class="s-p" style="margin-bottom:32px;">Choose the plan that fits you.</p>
+        <div style="display:grid;grid-template-columns:repeat(${cols},1fr);gap:16px;text-align:left;max-width:1000px;margin:0 auto;">
+          ${tiers.map((t,i)=>`<div style="border:${i===1?'2px solid #C7B695':'1px solid #eee'};background:${i===1?'#fffbf2':'#fff'};border-radius:8px;padding:24px;">
+            <div style="font-size:13px;font-weight:600;color:${i===1?'#907962':'#999'};margin-bottom:8px;">${t.toUpperCase()}</div>
+            <div style="font-size:32px;font-weight:700;margin-bottom:4px;">${prices[i]}<span style="font-size:13px;color:#999;font-weight:400;"> /mo</span></div>
+            <div style="font-size:12px;color:#666;line-height:2;margin:16px 0;">✓ Feature one<br>✓ Feature two<br>✓ Feature three</div>
+            <div class="s-btn" style="width:100%;text-align:center;background:${i===1?'#C7B695':'#111'};">Choose</div>
+          </div>`).join('')}
+        </div>
+      </div>`;
+    }
+  },
+
+  features_bento: {
+    cat: 'generic',
+    name: { en: 'Features Bento', th: 'Features Bento' },
+    desc: { en: 'Mixed-size feature grid (bento layout)', th: 'ตารางฟีเจอร์ขนาดผสม (bento)' },
+    images: [
+      img('Bento 1 (large)', 800, 480, 'JPG/WebP', 'Hero feature image', 'ภาพฟีเจอร์หลัก'),
+      img('Bento 2', 400, 240, 'JPG/WebP', '', ''),
+      img('Bento 3', 400, 240, 'JPG/WebP', '', ''),
+      img('Bento 4', 400, 240, 'JPG/WebP', '', '')
+    ],
+    notes: { en: 'Asymmetric grid. Becomes single column on mobile.', th: 'ตารางไม่สมมาตร บนมือถือเปลี่ยนเป็น 1 คอลัมน์' },
+    render: (vp, sec, lang) => {
+      if (vp === 'mobile') {
+        return `<div class="s-block" style="padding:32px 16px;display:grid;gap:12px;">
+          ${sec.images.map((im,i)=>`<div style="border-radius:8px;overflow:hidden;">${phEl(sec, i, lang, vp)}</div>`).join('')}
+        </div>`;
+      }
+      return `<div class="s-block" style="padding:${vp==='tablet'?'40px':'60px'};">
+        <div style="display:grid;grid-template-columns:2fr 1fr 1fr;grid-template-rows:1fr 1fr;gap:12px;height:480px;">
+          <div style="grid-row:1/3;border-radius:8px;overflow:hidden;">${phEl(sec, 0, lang, vp)}</div>
+          <div style="border-radius:8px;overflow:hidden;">${phEl(sec, 1, lang, vp)}</div>
+          <div style="border-radius:8px;overflow:hidden;">${phEl(sec, 2, lang, vp)}</div>
+          <div style="grid-column:2/4;border-radius:8px;overflow:hidden;">${phEl(sec, 3, lang, vp)}</div>
+        </div>
+      </div>`;
+    }
+  },
+
+  cta_banner: {
+    cat: 'generic',
+    name: { en: 'CTA Banner', th: 'แบนเนอร์ CTA' },
+    desc: { en: 'Call-to-action banner with button', th: 'แบนเนอร์เรียกคลิกพร้อมปุ่ม' },
+    images: [],
+    texts: {
+      title:    { label: { en: 'Title', th: 'หัวข้อ' },        default: { en: 'Ready to begin?', th: 'พร้อมเริ่มต้นแล้วหรือยัง?' } },
+      subtitle: { label: { en: 'Subtitle', th: 'คำบรรยาย' },   default: { en: 'Join thousands of customers who trust us.', th: 'ร่วมกับลูกค้าหลายพันคนที่ไว้วางใจเรา' } },
+      btn:      { label: { en: 'Button', th: 'ปุ่ม' },          default: { en: 'Get started', th: 'เริ่มเลย' } },
+    },
+    notes: { en: 'Use accent color background.', th: 'ใช้สีเน้นเป็นพื้นหลัง' },
+    render: (vp, sec) => `<div class="s-block s-text-center" style="padding:${vp==='mobile'?'40px 20px':'56px 60px'};background:#1A1A1A;color:#fff;">
+      <h2 style="font-size:${vp==='mobile'?22:28}px;font-weight:700;margin-bottom:10px;">${etxt(sec,'title')}</h2>
+      <p style="font-size:14px;color:#aaa;margin-bottom:18px;">${etxt(sec,'subtitle')}</p>
+      <div class="s-btn" style="background:#C7B695;">${etxt(sec,'btn')}</div>
+    </div>`
+  },
+
+  testimonials: {
+    cat: 'generic',
+    name: { en: 'Testimonials', th: 'รีวิวลูกค้า' },
+    desc: { en: 'Customer testimonial cards', th: 'การ์ดรีวิวลูกค้า' },
+    images: Array.from({length:3}, (_,i)=>img(`Avatar ${i+1}`, 80, 80, 'JPG/PNG', 'Square avatar, circular crop', 'ภาพอวตาร crop วงกลม')),
+    texts: {
+      heading: { label: { en: 'Heading', th: 'หัวเรื่อง' }, default: { en: 'What customers say', th: 'ลูกค้าพูดถึงเรา' } },
+    },
+    notes: { en: '3 testimonials, stack on mobile.', th: '3 รีวิว เรียงบนมือถือ' },
+    render: (vp, sec, lang) => {
+      const cols = vp === 'mobile' ? 1 : 3;
+      return `<div class="s-block" style="padding:${vp==='mobile'?'40px 16px':'60px'};background:#fafafa;">
+        <h2 class="s-h s-text-center" style="margin-bottom:32px;">${etxt(sec,'heading')}</h2>
+        <div style="display:grid;grid-template-columns:repeat(${cols},1fr);gap:16px;">
+          ${sec.images.map((im,i)=>`<div style="background:#fff;border:1px solid #eee;border-radius:8px;padding:24px;">
+            <div style="font-size:13px;color:#444;line-height:1.6;margin-bottom:16px;">"Beautiful pieces and exceptional service. Highly recommended."</div>
+            <div style="display:flex;align-items:center;gap:10px;">
+              <div style="width:40px;height:40px;border-radius:50%;overflow:hidden;flex-shrink:0;">${phEl(sec, i, lang, vp)}</div>
+              <div><div style="font-size:13px;font-weight:600;">Customer ${i+1}</div><div style="font-size:11px;color:#999;">Verified buyer</div></div>
+            </div>
+          </div>`).join('')}
+        </div>
+      </div>`;
+    }
+  },
+
+  faq_accordion: {
+    cat: 'generic',
+    name: { en: 'FAQ Accordion', th: 'FAQ' },
+    desc: { en: 'Frequently asked questions', th: 'คำถามที่พบบ่อย' },
+    images: [],
+    notes: { en: 'Expandable rows. First open by default.', th: 'แต่ละแถวคลิกเปิด/ปิด อันแรกเปิดเริ่มต้น' },
+    render: (vp) => {
+      const qs = ['Do you offer international shipping?','How long is the warranty?','Can I return a product?','Do you offer custom designs?'];
+      return `<div class="s-block" style="padding:${vp==='mobile'?'40px 16px':'60px'};">
+        <h2 class="s-h s-text-center" style="margin-bottom:32px;">FAQ</h2>
+        <div style="max-width:720px;margin:0 auto;">
+          ${qs.map((q,i)=>`<div style="border-bottom:1px solid #eee;padding:18px 4px;display:flex;justify-content:space-between;align-items:center;">
+            <span style="font-size:14px;font-weight:500;">${q}</span><span style="color:#999;">${i===0?'−':'+'}</span>
+          </div>${i===0?'<div style="padding:0 4px 18px;font-size:13px;color:#666;line-height:1.6;">Yes, we ship worldwide with tracked delivery options.</div>':''}`).join('')}
+        </div>
+      </div>`;
+    }
+  },
+
+  stats: {
+    cat: 'generic',
+    name: { en: 'Stats Section', th: 'สถิติ' },
+    desc: { en: 'Numerical highlights row', th: 'ตัวเลขเด่น' },
+    images: [],
+    notes: { en: '3-4 stats, large numbers.', th: '3-4 สถิติ ตัวเลขใหญ่' },
+    render: (vp) => {
+      const cols = vp === 'mobile' ? 2 : 4;
+      const stats = [['50+','Years'],['10K+','Customers'],['200+','Designs'],['5★','Rating']];
+      return `<div class="s-block" style="padding:${vp==='mobile'?'32px 16px':'48px 60px'};">
+        <div style="display:grid;grid-template-columns:repeat(${cols},1fr);gap:20px;text-align:center;">
+          ${stats.map(([n,l])=>`<div><div style="font-size:${vp==='mobile'?28:36}px;font-weight:700;color:#907962;">${n}</div><div style="font-size:12px;color:#666;text-transform:uppercase;letter-spacing:1px;">${l}</div></div>`).join('')}
+        </div>
+      </div>`;
+    }
+  },
+
+  newsletter: {
+    cat: 'generic',
+    name: { en: 'Newsletter Signup', th: 'สมัครจดหมายข่าว' },
+    desc: { en: 'Email signup form', th: 'ฟอร์มสมัครรับอีเมล' },
+    images: [],
+    texts: {
+      title:    { label: { en: 'Title', th: 'หัวข้อ' },         default: { en: 'Stay in the loop', th: 'ติดตามเรา' } },
+      subtitle: { label: { en: 'Subtitle', th: 'คำบรรยาย' },    default: { en: 'Sign up for new arrivals & exclusive offers.', th: 'สมัครรับข่าวสินค้าใหม่และโปรโมชั่นพิเศษ' } },
+      btn:      { label: { en: 'Button', th: 'ปุ่ม' },          default: { en: 'Subscribe', th: 'สมัคร' } },
+    },
+    notes: { en: 'Single field + button.', th: 'ฟิลด์เดียว + ปุ่ม' },
+    render: (vp, sec) => `<div class="s-block s-text-center" style="padding:${vp==='mobile'?'40px 16px':'56px 60px'};background:#fafafa;">
+      <h2 class="s-h" style="margin-bottom:8px;">${etxt(sec,'title')}</h2>
+      <p class="s-p" style="margin-bottom:20px;">${etxt(sec,'subtitle')}</p>
+      <div style="display:flex;gap:8px;max-width:420px;margin:0 auto;${vp==='mobile'?'flex-direction:column;':''}">
+        <div style="flex:1;height:42px;background:#fff;border:1px solid #ddd;border-radius:4px;padding:0 14px;display:flex;align-items:center;color:#999;font-size:13px;">your@email.com</div>
+        <div class="s-btn" style="margin:0;height:42px;display:flex;align-items:center;">${etxt(sec,'btn')}</div>
+      </div>
+    </div>`
+  },
+
+  blog_cards: {
+    cat: 'generic',
+    name: { en: 'Blog Cards (3-col)', th: 'การ์ดบทความ 3 คอลัมน์' },
+    desc: { en: 'Article preview cards', th: 'การ์ดพรีวิวบทความ' },
+    images: Array.from({length:3}, (_,i)=>img(`Article ${i+1}`, 400, 240, 'JPG/WebP', '', '')),
+    notes: { en: 'Date + category + title + excerpt.', th: 'วันที่ + หมวด + ชื่อ + เนื้อหาย่อ' },
+    render: (vp, sec, lang) => {
+      const cols = vp === 'mobile' ? 1 : 3;
+      return `<div class="s-block" style="padding:${vp==='mobile'?'32px 16px':'60px'};">
+        <h2 class="s-h" style="margin-bottom:24px;">From the journal</h2>
+        <div style="display:grid;grid-template-columns:repeat(${cols},1fr);gap:24px;">
+          ${sec.images.map((im,i)=>`<div>
+            <div style="border-radius:6px;overflow:hidden;margin-bottom:12px;">${phEl(sec, i, lang, vp)}</div>
+            <div style="font-size:11px;color:#999;text-transform:uppercase;letter-spacing:1px;margin-bottom:6px;">Story · 5 min read</div>
+            <div style="font-size:16px;font-weight:600;margin-bottom:6px;">Article title goes here</div>
+            <div style="font-size:12px;color:#666;line-height:1.5;">A short excerpt that gives readers a taste of what's inside.</div>
+          </div>`).join('')}
+        </div>
+      </div>`;
+    }
+  },
+
+  contact_form: {
+    cat: 'generic',
+    name: { en: 'Contact Form', th: 'ฟอร์มติดต่อ' },
+    desc: { en: 'Contact us form', th: 'ฟอร์มติดต่อเรา' },
+    images: [],
+    notes: { en: 'Name, email, message + submit.', th: 'ชื่อ อีเมล ข้อความ + ส่ง' },
+    render: (vp) => `<div class="s-block" style="padding:${vp==='mobile'?'40px 16px':'60px'};">
+      <div style="max-width:520px;margin:0 auto;">
+        <h2 class="s-h s-text-center" style="margin-bottom:8px;">Get in touch</h2>
+        <p class="s-p s-text-center" style="margin-bottom:24px;">We'd love to hear from you.</p>
+        ${[['Name','38px'],['Email','38px'],['Message','100px']].map(([l,h])=>`<div style="margin-bottom:12px;"><div style="font-size:12px;color:#666;margin-bottom:4px;">${l}</div><div style="height:${h};border:1px solid #ddd;border-radius:4px;background:#fafafa;"></div></div>`).join('')}
+        <div class="s-btn" style="width:100%;text-align:center;">Send message</div>
+      </div>
+    </div>`
+  },
+
+  team_grid: {
+    cat: 'generic',
+    name: { en: 'Team Grid', th: 'ทีมงาน' },
+    desc: { en: 'Team member cards', th: 'การ์ดสมาชิกทีม' },
+    images: Array.from({length:4}, (_,i)=>img(`Member ${i+1}`, 280, 280, 'JPG', 'Square portrait', 'รูปพอร์ตเทรตจัตุรัส')),
+    notes: { en: 'Headshot + name + role.', th: 'รูปหน้า + ชื่อ + ตำแหน่ง' },
+    render: (vp, sec, lang) => {
+      const cols = vp === 'mobile' ? 2 : 4;
+      return `<div class="s-block" style="padding:${vp==='mobile'?'32px 16px':'60px'};">
+        <h2 class="s-h s-text-center" style="margin-bottom:32px;">Our team</h2>
+        <div style="display:grid;grid-template-columns:repeat(${cols},1fr);gap:16px;">
+          ${sec.images.map((im,i)=>`<div style="text-align:center;">
+            <div style="border-radius:8px;overflow:hidden;margin-bottom:10px;">${phEl(sec, i, lang, vp)}</div>
+            <div style="font-size:13px;font-weight:600;">Name ${i+1}</div>
+            <div style="font-size:11px;color:#999;">Role title</div>
+          </div>`).join('')}
+        </div>
+      </div>`;
+    }
+  },
+
+  gallery_grid: {
+    cat: 'generic',
+    name: { en: 'Gallery Grid', th: 'แกลเลอรี' },
+    desc: { en: 'Photo gallery, mixed sizes', th: 'แกลเลอรีรูปภาพ ขนาดผสม' },
+    images: Array.from({length:6}, (_,i)=>img(`Photo ${i+1}`, 400, 400, 'JPG/WebP', '', '')),
+    notes: { en: '3x2 grid on desktop, 2x3 on mobile.', th: 'ตาราง 3x2 บน desktop, 2x3 บนมือถือ' },
+    render: (vp, sec, lang) => {
+      const cols = vp === 'mobile' ? 2 : (vp === 'tablet' ? 3 : 3);
+      return `<div class="s-block" style="padding:${vp==='mobile'?'24px 16px':'40px 60px'};">
+        <div style="display:grid;grid-template-columns:repeat(${cols},1fr);gap:8px;">
+          ${sec.images.map((im,i)=>`<div style="overflow:hidden;border-radius:4px;">${phEl(sec, i, lang, vp)}</div>`).join('')}
+        </div>
+      </div>`;
+    }
+  },
+
+  dashboard_stats: {
+    cat: 'generic',
+    name: { en: 'Dashboard Stats', th: 'สถิติแดชบอร์ด' },
+    desc: { en: 'KPI cards row', th: 'การ์ด KPI' },
+    images: [],
+    notes: { en: '4 KPIs with trend indicator.', th: '4 KPI พร้อม indicator แนวโน้ม' },
+    render: (vp) => {
+      const cols = vp === 'mobile' ? 1 : (vp === 'tablet' ? 2 : 4);
+      const kpis = [['Revenue','฿ 2.4M','+12%'],['Orders','1,832','+5%'],['Customers','842','+18%'],['Avg Order','฿ 1,310','-2%']];
+      return `<div class="s-block" style="padding:${vp==='mobile'?'24px 16px':'32px 40px'};background:#fafafa;">
+        <div style="display:grid;grid-template-columns:repeat(${cols},1fr);gap:14px;">
+          ${kpis.map(([l,v,d])=>`<div style="background:#fff;border:1px solid #eee;border-radius:8px;padding:18px;">
+            <div style="font-size:11px;color:#999;text-transform:uppercase;letter-spacing:1px;">${l}</div>
+            <div style="font-size:24px;font-weight:700;margin:6px 0;">${v}</div>
+            <div style="font-size:12px;color:${d.startsWith('-')?'#AA182C':'#10b981'};">${d} this month</div>
+          </div>`).join('')}
+        </div>
+      </div>`;
+    }
+  }
+};
+
+const NGG_DEFAULT = ['header','hero','sub_banner','product_grid_4','promo_split','promo_text_split','square_grid_3','feature_image_text','logo_strip','tall_grid_3','text_section','feature_grid_3','footer'];
+
+/* ============================================================
+   TEMPLATES
+   Each entry maps to a list of section ids. Pre-built for quick start.
+   ============================================================ */
+const TEMPLATES = {
+  homepage: [
+    {
+      id: 'ngg-default',
+      name: { en: 'NGG Default', th: 'NGG ค่าเริ่มต้น' },
+      desc: { en: 'Full-featured Thai jewelry homepage', th: 'หน้าแรกแบบเต็ม สำหรับร้านเครื่องประดับ' },
+      sections: NGG_DEFAULT,
+    },
+    {
+      id: 'minimal',
+      name: { en: 'Minimal', th: 'มินิมอล' },
+      desc: { en: 'Clean and simple — five essential sections', th: 'เรียบง่าย 5 sections สำคัญ' },
+      sections: ['header','hero','product_grid_4','feature_image_text','footer'],
+    },
+    {
+      id: 'brand-story',
+      name: { en: 'Brand Story', th: 'แบรนด์สตอรี่' },
+      desc: { en: 'Story-focused, editorial style', th: 'เน้นเล่าเรื่องแบรนด์ สไตล์นิตยสาร' },
+      sections: ['header','hero_centered','text_section','feature_image_text','tall_grid_3','footer'],
+    },
+    {
+      id: 'ecommerce',
+      name: { en: 'E-commerce Focus', th: 'เน้นขายสินค้า' },
+      desc: { en: 'Product-heavy with multiple grids and promos', th: 'เน้นแสดงสินค้า มีตารางและโปรโมชั่นหลายแบบ' },
+      sections: ['header','hero','product_grid_4','sub_banner','promo_split','square_grid_3','feature_grid_3','footer'],
+    },
+  ],
+  landing: [
+    {
+      id: 'product-launch',
+      name: { en: 'Product Launch', th: 'เปิดตัวสินค้า' },
+      desc: { en: 'Pitch a new product with proof and CTA', th: 'เปิดตัวสินค้าใหม่ พร้อม social proof และ CTA' },
+      sections: ['nav_bar','hero_centered','features_bento','stats','testimonials','cta_banner','footer'],
+    },
+    {
+      id: 'event',
+      name: { en: 'Event', th: 'อีเวนต์' },
+      desc: { en: 'Event landing with key info and FAQ', th: 'หน้าอีเวนต์ ข้อมูลสำคัญและคำถาม' },
+      sections: ['nav_bar','hero_centered','text_section','stats','faq_accordion','cta_banner'],
+    },
+    {
+      id: 'lead-gen',
+      name: { en: 'Lead Gen', th: 'เก็บลูกค้า' },
+      desc: { en: 'Capture emails and qualified leads', th: 'เก็บอีเมลและข้อมูลลูกค้า' },
+      sections: ['nav_bar','hero_split','features_bento','testimonials','faq_accordion','newsletter'],
+    },
+    {
+      id: 'coming-soon',
+      name: { en: 'Coming Soon', th: 'เปิดตัวเร็วๆ นี้' },
+      desc: { en: 'Pre-launch teaser with email signup', th: 'หน้า pre-launch พร้อมสมัครรับข่าวสาร' },
+      sections: ['hero_centered','text_section','newsletter'],
+    },
+  ],
+  custom: [
+    {
+      id: 'blank',
+      name: { en: 'Blank Canvas', th: 'เริ่มจากศูนย์' },
+      desc: { en: 'Start from scratch — drag sections from the library', th: 'เริ่มจากศูนย์ — ลาก section จาก library เอง' },
+      sections: [],
+    },
+  ],
+};
+
+/* Sections suited to each page type. Sections not in the list will be
+   dimmed (or hidden) in the library when the corresponding filter is on. */
+const PAGE_TYPE_SECTIONS = {
+  homepage: ['header','hero','hero_centered','hero_split','sub_banner','product_grid_4','promo_split','promo_text_split','square_grid_3','feature_image_text','logo_strip','tall_grid_3','feature_grid_3','text_section','footer','blog_cards','gallery_grid','testimonials','newsletter','cta_banner','nav_bar'],
+  landing:  ['nav_bar','hero_centered','hero_split','hero','features_bento','stats','testimonials','faq_accordion','cta_banner','newsletter','pricing_3tier','contact_form','team_grid','text_section','dashboard_stats','footer'],
+};
+
+function getCustomTemplates() {
+  try {
+    return JSON.parse(localStorage.getItem('ngg-builder-custom-templates-v1')) || [];
+  } catch (e) { return []; }
+}
+function saveCustomTemplate(name, sections, pageType) {
+  const list = getCustomTemplates();
+  list.unshift({
+    id: 'custom-' + Date.now(),
+    name: { en: name, th: name },
+    desc: { en: `Custom · ${sections.length} sections`, th: `Custom · ${sections.length} sections` },
+    sections,
+    pageType: pageType || 'homepage',
+    custom: true,
+  });
+  localStorage.setItem('ngg-builder-custom-templates-v1', JSON.stringify(list.slice(0, 12)));
+}
+function deleteCustomTemplate(id) {
+  const list = getCustomTemplates().filter(x => x.id !== id);
+  localStorage.setItem('ngg-builder-custom-templates-v1', JSON.stringify(list));
+}
+
+/* Schematic mini-preview shapes for each section. Used in template cards. */
+const MINI_SHAPE = {
+  header: 'bar-thin', nav_bar: 'bar-thin',
+  hero: 'image-tall', hero_centered: 'image-tall-center', hero_split: 'split',
+  sub_banner: 'image-mid',
+  product_grid_4: 'grid-4', promo_split: 'split-half', promo_text_split: 'split-half',
+  square_grid_3: 'grid-3', feature_image_text: 'split-half', logo_strip: 'logos',
+  tall_grid_3: 'tall-3', feature_grid_3: 'grid-3', text_section: 'text',
+  footer: 'bar-tall',
+  cta_banner: 'bar-mid', testimonials: 'cards-3', faq_accordion: 'lines',
+  pricing_3tier: 'cards-3', features_bento: 'bento', auth_form: 'card-center',
+  newsletter: 'bar-mid', blog_cards: 'cards-3', contact_form: 'form',
+  team_grid: 'grid-4', gallery_grid: 'grid-6',
+  stats: 'bar-stats', dashboard_stats: 'bar-stats', video_section: 'image-mid',
+};
+
+function templatePreview(sectionIds) {
+  if (!sectionIds.length) {
+    return `<div class="tmpl-mini-empty">+</div>`;
+  }
+  return `<div class="tmpl-mini">
+    ${sectionIds.map(id => `<div class="mini-row" data-shape="${MINI_SHAPE[id] || 'block'}"></div>`).join('')}
+  </div>`;
+}
+
+/* ============================================================
+   STATE
+   ============================================================ */
+const STORAGE_KEY = 'ngg-layout-builder-v1';
+
+const state = {
+  layout: [],          // [{ id, sectionId, images: [{dataUrl,w,h}|null], note: '' }]
+  selectedId: null,
+  lang: 'en',
+  theme: 'light',
+  vp: 'all',
+  cat: 'all',
+  search: '',
+  inspectorDevice: 'desktop',
+  zoom: 1,
+  pageType: null,         // 'homepage' | 'landing' | 'custom' | null
+  ptFilter: true,         // dim sections that don't match pageType
+  welcomePT: 'homepage',  // active tab in welcome modal
+  history: [],         // for undo
+  redoStack: [],       // for redo
+  draggingFromLib: null,
+  draggingFromCanvas: null,
+};
+
+let uid = 1;
+function nextId() { return 'i' + (uid++); }
+
+function makeImageSlot() {
+  return { desktop: null, tablet: null, mobile: null, customW: null, customH: null };
+}
+
+function makeInstance(sectionId) {
+  const def = SECTIONS[sectionId];
+  if (!def) return null;
+  return {
+    id: nextId(),
+    sectionId,
+    images: (def.images || []).map(() => makeImageSlot()),
+    texts: {},
+    note: ''
+  };
+}
+
+/* Text helper — returns instance override or default text for the current language. */
+function txt(sec, key) {
+  if (sec.texts && sec.texts[key] != null && sec.texts[key] !== '') return sec.texts[key];
+  const def = SECTIONS[sec.sectionId];
+  const t = def && def.texts ? def.texts[key] : null;
+  if (!t) return '';
+  return t.default[state.lang] || t.default.en || '';
+}
+/* HTML-safe version. */
+function etxt(sec, key) { return escapeHtml(txt(sec, key)); }
+
+/* Pick image data to display on a viewport. Falls back to desktop if device variant missing. */
+function getImageData(inst, i, vp) {
+  const slot = inst.images[i];
+  if (!slot) return null;
+  if (slot.dataUrl) return slot;            // legacy single-image format
+  return slot[vp] || slot.desktop || null;
+}
+
+/* Effective image spec (custom ratio override). */
+function getImageSpec(inst, i) {
+  const def = SECTIONS[inst.sectionId];
+  const baseSpec = def && def.images ? def.images[i] : null;
+  const slot = inst.images[i];
+  if (!baseSpec) return null;
+  if (!slot) return baseSpec;
+  if (slot.customW && slot.customH) {
+    return Object.assign({}, baseSpec, { w: slot.customW, h: slot.customH });
+  }
+  return baseSpec;
+}
+
+/* Migrate legacy or partial image slots into the variant shape. */
+function normalizeImageSlot(raw) {
+  if (!raw) return makeImageSlot();
+  if (raw.dataUrl) {
+    return { desktop: { dataUrl: raw.dataUrl, w: raw.w, h: raw.h }, tablet: null, mobile: null, customW: null, customH: null };
+  }
+  return {
+    desktop: raw.desktop || null,
+    tablet:  raw.tablet  || null,
+    mobile:  raw.mobile  || null,
+    customW: raw.customW || null,
+    customH: raw.customH || null,
+  };
+}
+
+function snapshot() {
+  return JSON.stringify({ layout: state.layout, selectedId: state.selectedId });
+}
+function pushHistory() {
+  state.history.push(snapshot());
+  if (state.history.length > 50) state.history.shift();
+  state.redoStack = [];
+}
+function undo() {
+  if (state.history.length === 0) { toast(t('toast_nothing_undo')); return; }
+  state.redoStack.push(snapshot());
+  const prev = JSON.parse(state.history.pop());
+  state.layout = prev.layout;
+  state.selectedId = prev.selectedId;
+  render();
+  toast(t('toast_undo'));
+}
+function redo() {
+  if (state.redoStack.length === 0) { toast(t('toast_nothing_redo')); return; }
+  state.history.push(snapshot());
+  const next = JSON.parse(state.redoStack.pop());
+  state.layout = next.layout;
+  state.selectedId = next.selectedId;
+  render();
+  toast(t('toast_redo'));
+}
+
+function persist() {
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify({
+      layout: state.layout,
+      lang: state.lang,
+      theme: state.theme,
+      pageType: state.pageType,
+    }));
+  } catch (e) { /* quota exceeded etc. */ }
+}
+function loadPersisted() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) return false;
+    const data = JSON.parse(raw);
+    if (data.lang) state.lang = data.lang;
+    if (data.theme) state.theme = data.theme;
+    if (data.pageType) state.pageType = data.pageType;
+    if (Array.isArray(data.layout) && data.layout.length > 0) {
+      state.layout = data.layout.filter(x => SECTIONS[x.sectionId]);
+      state.layout.forEach(inst => {
+        if (!inst.id) inst.id = nextId();
+        if (!inst.texts || typeof inst.texts !== 'object') inst.texts = {};
+        const def = SECTIONS[inst.sectionId];
+        const expected = (def.images || []).length;
+        const cur = Array.isArray(inst.images) ? inst.images : [];
+        const out = [];
+        for (let i = 0; i < expected; i++) out.push(normalizeImageSlot(cur[i]));
+        inst.images = out;
+      });
+      return true;
+    }
+  } catch (e) {}
+  return false;
+}
+
+function t(key) { return I18N[state.lang][key] || key; }
+
+/* ============================================================
+   RENDER: Library
+   ============================================================ */
+function renderLibrary() {
+  const list = document.getElementById('lib-list');
+  const q = state.search.trim().toLowerCase();
+  const cat = state.cat;
+  const ids = Object.keys(SECTIONS).filter(id => {
+    const s = SECTIONS[id];
+    if (cat !== 'all' && s.cat !== cat) return false;
+    if (q && !s.name.en.toLowerCase().includes(q) && !s.name.th.includes(q) && !id.includes(q)) return false;
+    return true;
+  });
+
+  // determine which sections are dimmed by page-type filter
+  const ptList = state.pageType && state.ptFilter ? PAGE_TYPE_SECTIONS[state.pageType] : null;
+  const isDim = (id) => ptList ? !ptList.includes(id) : false;
+
+  // group by category
+  const byCat = { ngg: [], generic: [] };
+  ids.forEach(id => byCat[SECTIONS[id].cat].push(id));
+
+  let html = '';
+  const renderGroup = (catKey, items) => {
+    if (items.length === 0) return '';
+    let h = `<div class="lib-cat-title">${t('cat_' + catKey)}</div>`;
+    // Sort: matching page-type first, dimmed last
+    const sorted = items.slice().sort((a, b) => (isDim(a) ? 1 : 0) - (isDim(b) ? 1 : 0));
+    h += sorted.map(id => {
+      const s = SECTIONS[id];
+      const imgCount = (s.images || []).length;
+      const meta = imgCount === 0 ? '' : `<span class="lib-item-meta">${imgCount} ${imgCount===1?'image':'images'}</span>`;
+      return `<div class="lib-item ${isDim(id)?'dimmed':''}" draggable="true" data-section="${id}">
+        <div class="lib-item-name">${escapeHtml(s.name[state.lang])}</div>
+        <div class="lib-item-desc">${escapeHtml(s.desc[state.lang])}</div>
+        ${meta}
+      </div>`;
+    }).join('');
+    return h;
+  };
+
+  if (cat === 'all') {
+    html = renderGroup('ngg', byCat.ngg) + renderGroup('generic', byCat.generic);
+  } else {
+    html = renderGroup(cat, byCat[cat]);
+  }
+
+  if (ids.length === 0) {
+    html = `<div style="padding:30px 16px;text-align:center;color:var(--text-subtle);font-size:12px;">No sections found</div>`;
+  }
+
+  list.innerHTML = html;
+  document.getElementById('lib-count').textContent = `${ids.length}/${Object.keys(SECTIONS).length}`;
+
+  // attach drag handlers
+  list.querySelectorAll('.lib-item').forEach(el => {
+    el.addEventListener('dragstart', e => {
+      state.draggingFromLib = el.dataset.section;
+      state.draggingFromCanvas = null;
+      el.classList.add('dragging');
+      e.dataTransfer.effectAllowed = 'copy';
+      e.dataTransfer.setData('text/plain', 'lib:' + el.dataset.section);
+    });
+    el.addEventListener('dragend', () => {
+      el.classList.remove('dragging');
+      state.draggingFromLib = null;
+      clearDropIndicators();
+    });
+  });
+}
+
+/* ============================================================
+   RENDER: Viewport
+   ============================================================ */
+function renderViewport(vpName) {
+  const frame = document.getElementById('vp-' + vpName);
+  if (state.layout.length === 0) {
+    frame.innerHTML = `<div style="padding:60px 24px;text-align:center;color:#999;font-size:13px;">${t('empty_canvas')}</div>`;
+    return;
+  }
+
+  let html = `<div class="drop-indicator" data-drop-idx="0"></div>`;
+  state.layout.forEach((inst, idx) => {
+    const def = SECTIONS[inst.sectionId];
+    if (!def) return;
+    const isSel = inst.id === state.selectedId;
+    const inner = def.render(vpName, inst, state.lang);
+    html += `<div class="section ${isSel?'selected':''}" data-inst="${inst.id}" data-idx="${idx}">
+      ${inner}
+      <div class="sec-controls">
+        <button class="sec-ctrl-btn" data-action="up" title="Move up">↑</button>
+        <button class="sec-ctrl-btn" data-action="down" title="Move down">↓</button>
+        <button class="sec-ctrl-btn" data-action="dup" title="Duplicate">⧉</button>
+        <button class="sec-ctrl-btn delete" data-action="del" title="Delete">✕</button>
+      </div>
+    </div>`;
+    html += `<div class="drop-indicator" data-drop-idx="${idx+1}"></div>`;
+  });
+
+  frame.innerHTML = html;
+
+  // attach section click & control handlers
+  frame.querySelectorAll('.section').forEach(el => {
+    const instId = el.dataset.inst;
+    el.addEventListener('click', e => {
+      // ignore if clicked on a control button
+      if (e.target.closest('.sec-ctrl-btn') || e.target.closest('.ph-img-btn')) return;
+      // (placeholders handle their own click → select; this also catches
+      // clicks on text/empty areas of the section)
+      state.selectedId = instId;
+      render();
+    });
+    el.querySelectorAll('.sec-ctrl-btn').forEach(btn => {
+      btn.addEventListener('click', e => {
+        e.stopPropagation();
+        const action = btn.dataset.action;
+        const idx = state.layout.findIndex(x => x.id === instId);
+        if (idx < 0) return;
+        if (action === 'up' && idx > 0) {
+          pushHistory();
+          [state.layout[idx-1], state.layout[idx]] = [state.layout[idx], state.layout[idx-1]];
+          state.selectedId = instId;
+          render(); toast(t('toast_moved'));
+        } else if (action === 'down' && idx < state.layout.length-1) {
+          pushHistory();
+          [state.layout[idx+1], state.layout[idx]] = [state.layout[idx], state.layout[idx+1]];
+          state.selectedId = instId;
+          render(); toast(t('toast_moved'));
+        } else if (action === 'dup') {
+          pushHistory();
+          const copy = JSON.parse(JSON.stringify(state.layout[idx]));
+          copy.id = nextId();
+          state.layout.splice(idx+1, 0, copy);
+          state.selectedId = copy.id;
+          render(); toast(t('toast_duplicated'));
+        } else if (action === 'del') {
+          pushHistory();
+          state.layout.splice(idx, 1);
+          state.selectedId = null;
+          render(); toast(t('toast_removed'));
+        }
+      });
+    });
+  });
+
+  // attach placeholder upload handlers
+  frame.querySelectorAll('.ph').forEach(ph => {
+    const instId = ph.dataset.inst;
+    const imgIdx = parseInt(ph.dataset.imgidx, 10);
+    if (isNaN(imgIdx)) return;
+    /* Single click → select section. Double click → upload image. */
+    ph.addEventListener('click', e => {
+      if (e.target.closest('.ph-img-btn')) return;
+      e.stopPropagation();
+      state.selectedId = instId;
+      render();
+    });
+    ph.addEventListener('dblclick', e => {
+      if (e.target.closest('.ph-img-btn')) return;
+      e.stopPropagation();
+      e.preventDefault();
+      pickImageFor(instId, imgIdx, state.inspectorDevice);
+    });
+    // file drag-drop
+    ph.addEventListener('dragover', e => {
+      if (e.dataTransfer && Array.from(e.dataTransfer.types || []).includes('Files')) {
+        e.preventDefault(); e.stopPropagation();
+        ph.classList.add('dragover');
+      }
+    });
+    ph.addEventListener('dragleave', () => ph.classList.remove('dragover'));
+    ph.addEventListener('drop', e => {
+      if (e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files[0]) {
+        e.preventDefault(); e.stopPropagation();
+        ph.classList.remove('dragover');
+        readImageFile(e.dataTransfer.files[0], instId, imgIdx);
+      }
+    });
+    ph.querySelectorAll('.ph-img-btn').forEach(btn => {
+      btn.addEventListener('click', e => {
+        e.stopPropagation();
+        const a = btn.dataset.action;
+        if (a === 'replace') pickImageFor(instId, imgIdx);
+        else if (a === 'remove') removeImageFor(instId, imgIdx);
+      });
+    });
+  });
+}
+
+function clearDropIndicators() {
+  document.querySelectorAll('.drop-indicator.active').forEach(el => el.classList.remove('active'));
+}
+
+/* ============================================================
+   RENDER: Inspector
+   ============================================================ */
+let _lastInspectedId = null;
+function renderInspector() {
+  const wrap = document.getElementById('inspector');
+  const inst = state.layout.find(x => x.id === state.selectedId);
+  if (!inst) {
+    wrap.innerHTML = `<div class="insp-empty">${escapeHtml(t('inspect_empty')).replace(/\n/g,'<br>')}</div>`;
+    return;
+  }
+  const def = SECTIONS[inst.sectionId];
+  const idx = state.layout.findIndex(x => x.id === inst.id);
+
+  const dev = state.inspectorDevice || 'desktop';
+  const devIcon = { desktop: '🖥', tablet: '▭', mobile: '▯' };
+  const devLabel = { desktop: t('desktop'), tablet: t('tablet'), mobile: t('mobile') };
+
+  const ratioPresets = [
+    { key: 'default', label: t('preset_default') },
+    { key: '1:1', w: 1, h: 1 },
+    { key: '4:3', w: 4, h: 3 },
+    { key: '3:2', w: 3, h: 2 },
+    { key: '16:9', w: 16, h: 9 },
+    { key: '2:1', w: 2, h: 1 },
+    { key: '21:9', w: 21, h: 9 },
+    { key: 'custom', label: t('preset_custom') },
+  ];
+
+  let imagesHtml = '';
+  if (def.images.length === 0) {
+    imagesHtml = `<div style="font-size:11px;color:var(--text-subtle);padding:8px 0;">${t('no_images')}</div>`;
+  } else {
+    imagesHtml = def.images.map((baseSpec, i) => {
+      inst.images[i] = normalizeImageSlot(inst.images[i]);
+      const slot = inst.images[i];
+      const effSpec = getImageSpec(inst, i);
+      const ratio = (effSpec.w / effSpec.h).toFixed(2);
+      const baseRatio = (baseSpec.w / baseSpec.h).toFixed(2);
+      const customActive = !!(slot.customW && slot.customH);
+
+      // device tabs
+      const tabs = ['desktop','tablet','mobile'].map(d => {
+        const has = !!slot[d];
+        return `<button class="dev-tab ${d===dev?'active':''}" data-act="setdev" data-d="${d}">
+          <span>${devIcon[d]}</span> ${devLabel[d]} ${has ? '<span class="dev-dot"></span>' : ''}
+        </button>`;
+      }).join('');
+
+      // active device thumb
+      const data = slot[dev];
+      let thumbHtml = `<div class="image-thumb">${t('no_image')} <span style="opacity:0.6;font-size:10px;">(${devLabel[dev]})</span></div>`;
+      let warn = '';
+      if (data && data.dataUrl) {
+        thumbHtml = `<div class="image-thumb" style="aspect-ratio:${effSpec.w}/${effSpec.h};"><img src="${data.dataUrl}" alt=""></div>`;
+        if (data.w && data.h) {
+          const upRatio = (data.w / data.h).toFixed(2);
+          if (Math.abs(upRatio - ratio) > 0.05) {
+            warn = `<div style="font-size:10px;color:var(--warn);background:var(--warn-bg);padding:4px 8px;border-radius:3px;margin-top:6px;font-family:'JetBrains Mono',monospace;">⚠ ${t('ratio_warn')} — uploaded ${upRatio}:1 vs spec ${ratio}:1</div>`;
+          }
+        }
+      }
+
+      // ratio preset detection
+      let activePreset = customActive ? 'custom' : 'default';
+      if (customActive) {
+        const r = slot.customW / slot.customH;
+        for (const p of ratioPresets) {
+          if (p.w && Math.abs(p.w/p.h - r) < 0.001) { activePreset = p.key; break; }
+        }
+      }
+
+      const presetOptions = ratioPresets.map(p => {
+        const label = p.key === 'default' ? `${t('preset_default')} (${baseRatio}:1)` :
+                      p.key === 'custom' ? t('preset_custom') :
+                      p.key;
+        return `<option value="${p.key}" ${p.key===activePreset?'selected':''}>${label}</option>`;
+      }).join('');
+
+      return `<div class="image-card">
+        <div class="image-card-head">
+          <div class="image-card-name">${escapeHtml(baseSpec.name)}</div>
+          <span class="chip mono">${effSpec.w}×${effSpec.h}${customActive?' *':''}</span>
+        </div>
+        <div class="insp-meta-row">
+          <span class="chip gold">${ratio}:1</span>
+          <span class="chip">${baseSpec.format}</span>
+          ${customActive ? `<span class="chip" style="color:var(--brand);border-color:var(--brand);">${t('custom_label')}</span>` : ''}
+        </div>
+
+        <div class="dev-tabs">${tabs}</div>
+        ${thumbHtml}
+        ${warn}
+        <div class="image-card-actions">
+          <button data-act="upload" data-inst="${inst.id}" data-i="${i}">${data ? t('replace') : t('upload')} ${devLabel[dev]}</button>
+          ${data ? `<button class="danger" data-act="remove" data-inst="${inst.id}" data-i="${i}">${t('remove')}</button>` : ''}
+        </div>
+
+        <div class="ratio-section">
+          <div class="ratio-label">${t('image_ratio')}</div>
+          <select class="ratio-preset" data-act="preset" data-inst="${inst.id}" data-i="${i}" data-base-w="${baseSpec.w}" data-base-h="${baseSpec.h}">
+            ${presetOptions}
+          </select>
+          <div class="ratio-inputs">
+            <input type="number" class="ratio-w" data-inst="${inst.id}" data-i="${i}" value="${effSpec.w}" min="1">
+            <span>×</span>
+            <input type="number" class="ratio-h" data-inst="${inst.id}" data-i="${i}" value="${effSpec.h}" min="1">
+            <button class="ratio-reset" data-act="resetratio" data-inst="${inst.id}" data-i="${i}" title="${t('reset')}">↺</button>
+          </div>
+        </div>
+
+        ${(baseSpec['note_'+state.lang]) ? `<div class="image-note">${escapeHtml(baseSpec['note_'+state.lang])}</div>` : ''}
+      </div>`;
+    }).join('');
+  }
+
+  wrap.innerHTML = `
+    <div class="insp-body scrollbar">
+      <div class="insp-section">
+        <div class="insp-label">${t('section')}</div>
+        <div class="insp-name">${escapeHtml(def.name[state.lang])}</div>
+        <div class="insp-desc">${escapeHtml(def.desc[state.lang])}</div>
+        <div class="insp-meta-row">
+          <span class="chip mono">${t('position')}: ${idx+1}/${state.layout.length}</span>
+          <span class="chip mono">${inst.sectionId}</span>
+          <span class="chip gold">${def.cat.toUpperCase()}</span>
+        </div>
+      </div>
+
+      <div class="insp-section">
+        <div class="insp-label">${t('images')} (${def.images.length})</div>
+        ${imagesHtml}
+      </div>
+
+      <div class="insp-section">
+        <div class="insp-label">${t('text_content')}</div>
+        ${(() => {
+          if (!def.texts || Object.keys(def.texts).length === 0) {
+            return `<div style="font-size:11px;color:var(--text-subtle);padding:6px 0;">${t('no_text')}</div>`;
+          }
+          return Object.entries(def.texts).map(([key, conf]) => {
+            const cur = txt(inst, key);
+            const def_ = conf.default[state.lang] || conf.default.en;
+            const overridden = inst.texts && inst.texts[key] != null && inst.texts[key] !== '' && inst.texts[key] !== def_;
+            const isLong = (cur || '').length > 60 || /\n/.test(cur || '');
+            const fieldHtml = isLong
+              ? `<textarea class="text-input" data-tk="${key}" rows="3">${escapeHtml(cur)}</textarea>`
+              : `<input type="text" class="text-input" data-tk="${key}" value="${escapeHtml(cur)}">`;
+            return `<div class="text-field">
+              <div class="text-field-head">
+                <label>${escapeHtml(conf.label[state.lang] || conf.label.en)}</label>
+                ${overridden ? `<button class="text-reset" data-tk="${key}" title="${t('reset')}">↺</button>` : ''}
+              </div>
+              ${fieldHtml}
+            </div>`;
+          }).join('');
+        })()}
+      </div>
+
+      <div class="insp-section">
+        <div class="insp-label">${t('notes_team')}</div>
+        <div class="notes-block" style="margin-bottom:8px;">${escapeHtml(def.notes[state.lang])}</div>
+        <textarea class="notes-input" id="instance-note" placeholder="${t('add_note')}">${escapeHtml(inst.note || '')}</textarea>
+      </div>
+    </div>
+  `;
+
+  // attach handlers
+  wrap.querySelectorAll('button[data-act]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const a = btn.dataset.act;
+      const id = btn.dataset.inst;
+      const i = parseInt(btn.dataset.i, 10);
+      if (a === 'setdev') {
+        state.inspectorDevice = btn.dataset.d;
+        renderInspector();
+      } else if (a === 'upload') {
+        pickImageFor(id, i, state.inspectorDevice);
+      } else if (a === 'remove') {
+        removeImageFor(id, i, state.inspectorDevice);
+      } else if (a === 'resetratio') {
+        resetCustomRatio(id, i);
+      }
+    });
+  });
+  wrap.querySelectorAll('select[data-act="preset"]').forEach(sel => {
+    sel.addEventListener('change', () => {
+      const id = sel.dataset.inst;
+      const i = parseInt(sel.dataset.i, 10);
+      const v = sel.value;
+      if (v === 'default') return resetCustomRatio(id, i);
+      if (v === 'custom') return; // user types into number inputs
+      const [w,h] = v.split(':').map(Number);
+      // scale to baseW
+      const baseW = parseInt(sel.dataset.baseW, 10);
+      const newW = baseW;
+      const newH = Math.round(baseW * (h / w));
+      setCustomRatio(id, i, newW, newH);
+    });
+  });
+  wrap.querySelectorAll('input.ratio-w, input.ratio-h').forEach(inp => {
+    inp.addEventListener('change', () => {
+      const id = inp.dataset.inst;
+      const i = parseInt(inp.dataset.i, 10);
+      const card = inp.closest('.image-card');
+      const w = parseInt(card.querySelector('.ratio-w').value, 10);
+      const h = parseInt(card.querySelector('.ratio-h').value, 10);
+      if (w > 0 && h > 0) setCustomRatio(id, i, w, h);
+    });
+  });
+  const noteEl = document.getElementById('instance-note');
+  if (noteEl) {
+    noteEl.addEventListener('input', () => {
+      inst.note = noteEl.value;
+      persist();
+    });
+  }
+
+  // auto-scroll inspector body to top when selection changes
+  if (_lastInspectedId !== state.selectedId) {
+    const body = wrap.querySelector('.insp-body');
+    if (body) body.scrollTop = 0;
+    _lastInspectedId = state.selectedId;
+  }
+
+  /* text content edits — save on blur to avoid losing focus */
+  wrap.querySelectorAll('.text-input').forEach(el => {
+    el.addEventListener('blur', () => {
+      const key = el.dataset.tk;
+      const def_ = SECTIONS[inst.sectionId].texts[key];
+      const original = def_ ? (def_.default[state.lang] || def_.default.en) : '';
+      if (!inst.texts) inst.texts = {};
+      const v = el.value;
+      if (v === '' || v === original) {
+        delete inst.texts[key];
+      } else {
+        pushHistory();
+        inst.texts[key] = v;
+      }
+      render();
+    });
+    el.addEventListener('keydown', e => {
+      if (e.key === 'Enter' && el.tagName === 'INPUT') { e.preventDefault(); el.blur(); }
+    });
+  });
+  wrap.querySelectorAll('.text-reset').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const key = btn.dataset.tk;
+      if (inst.texts) delete inst.texts[key];
+      pushHistory();
+      render();
+    });
+  });
+}
+
+/* ============================================================
+   RENDER: Controls (topbar / status)
+   ============================================================ */
+function renderTopbar() {
+  // i18n labels
+  document.querySelectorAll('[data-i18n]').forEach(el => {
+    el.textContent = t(el.dataset.i18n);
+  });
+  document.querySelectorAll('[data-i18n-ph]').forEach(el => {
+    el.placeholder = t(el.dataset.i18nPh);
+  });
+  // active states
+  document.querySelectorAll('.lang-toggle button').forEach(b => b.classList.toggle('active', b.dataset.langSet === state.lang));
+  document.querySelectorAll('.theme-toggle button').forEach(b => b.classList.toggle('active', b.dataset.themeSet === state.theme));
+  document.querySelectorAll('.lib-tab').forEach(b => b.classList.toggle('active', b.dataset.cat === state.cat));
+  document.querySelectorAll('.vp-tab').forEach(b => b.classList.toggle('active', b.dataset.vp === state.vp));
+
+  // viewport visibility
+  document.querySelectorAll('.viewport').forEach(vp => {
+    vp.classList.toggle('hidden', state.vp !== 'all' && vp.dataset.vp !== state.vp);
+  });
+
+  // count
+  const c = state.layout.length;
+  document.getElementById('layout-count').textContent = `${c} ${c===1?'section':'sections'}`;
+
+  // page-type chip
+  const chip = document.getElementById('page-type-chip');
+  if (state.pageType) {
+    chip.style.display = '';
+    chip.textContent = t('pt_' + state.pageType);
+  } else {
+    chip.style.display = 'none';
+  }
+  // page-type filter toggle visibility
+  const filterRow = document.getElementById('lib-filter-row');
+  filterRow.style.display = state.pageType && state.pageType !== 'custom' ? '' : 'none';
+  const filterCb = document.getElementById('pt-filter-toggle');
+  if (filterCb) filterCb.checked = state.ptFilter;
+}
+
+function applyZoom() {
+  document.documentElement.style.setProperty('--uz', state.zoom);
+  const lbl = document.getElementById('btn-zoom-reset');
+  if (lbl) lbl.textContent = Math.round(state.zoom * 100) + '%';
+}
+
+function setZoom(z) {
+  state.zoom = Math.max(0.25, Math.min(3, z));
+  applyZoom();
+}
+
+function render() {
+  document.documentElement.setAttribute('data-theme', state.theme);
+  document.documentElement.lang = state.lang;
+  applyZoom();
+  renderTopbar();
+  renderLibrary();
+  renderViewport('desktop');
+  renderViewport('tablet');
+  renderViewport('mobile');
+  renderInspector();
+  persist();
+}
+
+/* ============================================================
+   PLACEHOLDER HTML
+   ============================================================ */
+function phEl(sec, imgIdx, lang, vp) {
+  const spec = getImageSpec(sec, imgIdx);
+  if (!spec) return '';
+  const data = getImageData(sec, imgIdx, vp);
+  const slot = sec.images[imgIdx] || {};
+  const ratio = (spec.w / spec.h).toFixed(2);
+  const aspectStyle = `aspect-ratio:${spec.w}/${spec.h};`;
+  const fallbackBadge = data && slot[vp] == null && slot.desktop ? `<div class="ph-fallback">↳ desktop</div>` : '';
+
+  if (data && data.dataUrl) {
+    let warnBadge = '';
+    if (data.w && data.h) {
+      const ur = data.w / data.h;
+      if (Math.abs(ur - spec.w/spec.h) > 0.05) {
+        warnBadge = `<div class="ph-warn">⚠ ${(ur).toFixed(2)}:1 ≠ ${ratio}:1</div>`;
+      }
+    }
+    return `<div class="ph has-image" style="${aspectStyle}" data-inst="${sec.id}" data-imgidx="${imgIdx}">
+      <img src="${data.dataUrl}" alt="">
+      ${warnBadge}${fallbackBadge}
+      <div class="ph-img-tools">
+        <button class="ph-img-btn" data-action="replace" title="Replace">↺</button>
+        <button class="ph-img-btn" data-action="remove" title="Remove">✕</button>
+      </div>
+    </div>`;
+  }
+  const note = spec['note_' + lang] || '';
+  return `<div class="ph" style="${aspectStyle}" data-inst="${sec.id}" data-imgidx="${imgIdx}">
+    <div class="ph-name">${escapeHtml(spec.name)}</div>
+    <div class="ph-size">${spec.w} × ${spec.h}</div>
+    <div class="ph-meta">${ratio}:1 · ${spec.format} · ${vp}</div>
+    ${note ? `<div class="ph-note">${escapeHtml(note)}</div>` : ''}
+    <div class="ph-hint">${t('hint_dblclick')}</div>
+  </div>`;
+}
+
+function escapeHtml(s) {
+  if (s == null) return '';
+  return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+/* ============================================================
+   IMAGE UPLOAD
+   ============================================================ */
+let pendingImageTarget = null; // { instId, imgIdx, device }
+
+function pickImageFor(instId, imgIdx, device) {
+  pendingImageTarget = { instId, imgIdx, device: device || state.inspectorDevice || 'desktop' };
+  document.getElementById('img-input').click();
+}
+
+document.getElementById('img-input').addEventListener('change', e => {
+  const file = e.target.files && e.target.files[0];
+  if (!file || !pendingImageTarget) return;
+  readImageFile(file, pendingImageTarget.instId, pendingImageTarget.imgIdx, pendingImageTarget.device);
+  pendingImageTarget = null;
+  e.target.value = '';
+});
+
+function readImageFile(file, instId, imgIdx, device) {
+  device = device || 'desktop';
+  const reader = new FileReader();
+  reader.onload = () => {
+    const dataUrl = reader.result;
+    const img = new Image();
+    img.onload = () => {
+      const inst = state.layout.find(x => x.id === instId);
+      if (!inst) return;
+      pushHistory();
+      inst.images[imgIdx] = normalizeImageSlot(inst.images[imgIdx]);
+      inst.images[imgIdx][device] = { dataUrl, w: img.naturalWidth, h: img.naturalHeight };
+      render();
+      toast(t('toast_image_uploaded'), 'success');
+    };
+    img.src = dataUrl;
+  };
+  reader.readAsDataURL(file);
+}
+
+function removeImageFor(instId, imgIdx, device) {
+  device = device || 'desktop';
+  const inst = state.layout.find(x => x.id === instId);
+  if (!inst || !inst.images[imgIdx]) return;
+  pushHistory();
+  inst.images[imgIdx] = normalizeImageSlot(inst.images[imgIdx]);
+  inst.images[imgIdx][device] = null;
+  render();
+  toast(t('toast_image_removed'));
+}
+
+function setCustomRatio(instId, imgIdx, w, h) {
+  const inst = state.layout.find(x => x.id === instId);
+  if (!inst) return;
+  inst.images[imgIdx] = normalizeImageSlot(inst.images[imgIdx]);
+  inst.images[imgIdx].customW = w || null;
+  inst.images[imgIdx].customH = h || null;
+  render();
+}
+
+function resetCustomRatio(instId, imgIdx) {
+  const inst = state.layout.find(x => x.id === instId);
+  if (!inst) return;
+  inst.images[imgIdx] = normalizeImageSlot(inst.images[imgIdx]);
+  inst.images[imgIdx].customW = null;
+  inst.images[imgIdx].customH = null;
+  render();
+}
+
+/* ============================================================
+   DRAG & DROP onto canvas
+   ============================================================ */
+function setupDropZones() {
+  document.querySelectorAll('.vp-frame').forEach(frame => {
+    frame.addEventListener('dragover', e => {
+      // ignore file drag
+      if (e.dataTransfer && Array.from(e.dataTransfer.types || []).includes('Files')) return;
+      if (!state.draggingFromLib && !state.draggingFromCanvas) return;
+      e.preventDefault();
+      e.dataTransfer.dropEffect = state.draggingFromCanvas ? 'move' : 'copy';
+      // find nearest drop indicator
+      const sections = Array.from(frame.querySelectorAll('.section'));
+      const y = e.clientY;
+      let insertIdx = sections.length;
+      for (let i = 0; i < sections.length; i++) {
+        const r = sections[i].getBoundingClientRect();
+        const mid = r.top + r.height/2;
+        if (y < mid) { insertIdx = i; break; }
+      }
+      // highlight indicator
+      clearDropIndicators();
+      const ind = frame.querySelector(`.drop-indicator[data-drop-idx="${insertIdx}"]`);
+      if (ind) ind.classList.add('active');
+      frame.dataset.insertIdx = insertIdx;
+    });
+    frame.addEventListener('dragleave', e => {
+      // only clear if leaving frame entirely
+      if (!frame.contains(e.relatedTarget)) clearDropIndicators();
+    });
+    frame.addEventListener('drop', e => {
+      if (e.dataTransfer && Array.from(e.dataTransfer.types || []).includes('Files')) return;
+      e.preventDefault();
+      const insertIdx = parseInt(frame.dataset.insertIdx || '0', 10);
+      clearDropIndicators();
+      if (state.draggingFromLib) {
+        const inst = makeInstance(state.draggingFromLib);
+        if (inst) {
+          pushHistory();
+          state.layout.splice(insertIdx, 0, inst);
+          state.selectedId = inst.id;
+          state.draggingFromLib = null;
+          render();
+          toast(t('toast_added'), 'success');
+        }
+      }
+    });
+  });
+}
+
+/* ============================================================
+   TOAST
+   ============================================================ */
+function toast(msg, type = '') {
+  const wrap = document.getElementById('toast-wrap');
+  const el = document.createElement('div');
+  el.className = 'toast' + (type ? ' ' + type : '');
+  el.textContent = msg;
+  wrap.appendChild(el);
+  setTimeout(() => {
+    el.style.transition = 'opacity 0.25s, transform 0.25s';
+    el.style.opacity = '0';
+    el.style.transform = 'translateY(8px)';
+    setTimeout(() => el.remove(), 260);
+  }, 2200);
+}
+
+/* ============================================================
+   MODAL
+   ============================================================ */
+let modalMode = null;       // 'export' | 'import'
+let exportFormat = 'json';  // 'json' | 'image'
+let exportImageVp = 'desktop';
+
+function openModal(mode) {
+  modalMode = mode;
+  exportFormat = 'json';
+  const modal = document.getElementById('modal');
+  const ta = document.getElementById('modal-textarea');
+  const title = document.getElementById('modal-title');
+  const action = document.getElementById('modal-action');
+  const opts = document.getElementById('modal-options');
+  const fmtTabs = document.getElementById('format-tabs');
+  const jsonPane = document.getElementById('json-pane');
+  const imgPane = document.getElementById('image-pane');
+  const copyBtn = document.getElementById('modal-copy');
+
+  fmtTabs.querySelectorAll('.fmt-tab').forEach(b => b.classList.toggle('active', b.dataset.fmt === 'json'));
+  jsonPane.style.display = '';
+  imgPane.style.display = 'none';
+
+  if (mode === 'export') {
+    title.textContent = t('export');
+    action.textContent = t('copy');
+    fmtTabs.style.display = 'flex';
+    opts.style.display = 'flex';
+    copyBtn.style.display = '';
+    ta.readOnly = true;
+    updateExportText();
+  } else {
+    title.textContent = t('import');
+    action.textContent = t('apply');
+    fmtTabs.style.display = 'none';
+    opts.style.display = 'none';
+    copyBtn.style.display = 'none';
+    ta.readOnly = false;
+    ta.value = '';
+    ta.placeholder = '{ "version": "1.0", ... }';
+  }
+  modal.classList.add('active');
+  if (mode === 'import') ta.focus();
+}
+
+function setExportFormat(fmt) {
+  exportFormat = fmt;
+  document.querySelectorAll('#format-tabs .fmt-tab').forEach(b => b.classList.toggle('active', b.dataset.fmt === fmt));
+  document.getElementById('json-pane').style.display = fmt === 'json' ? '' : 'none';
+  document.getElementById('image-pane').style.display = fmt === 'image' ? '' : 'none';
+  document.getElementById('modal-options').style.display = fmt === 'json' ? 'flex' : 'none';
+  document.getElementById('modal-copy').style.display = fmt === 'json' ? '' : 'none';
+  const action = document.getElementById('modal-action');
+  action.textContent = fmt === 'image' ? t('download') : t('copy');
+  // Auto-render preview when switching to image
+  if (fmt === 'image') {
+    _lastCapture = null;
+    refreshImagePreview(exportImageVp);
+  }
+}
+
+/* Last captured canvas (kept around so Download reuses the previewed canvas
+   instead of re-capturing). Cleared when viewport changes. */
+let _lastCapture = null;  // { vp, canvas, date }
+
+async function captureViewport(vp) {
+  if (!window.html2canvas) {
+    // wait briefly for CDN to finish loading
+    for (let i = 0; i < 20 && !window.html2canvas; i++) await new Promise(r => setTimeout(r, 100));
+  }
+  if (!window.html2canvas) throw new Error('html2canvas not loaded — check internet connection');
+  const originalWrapper = document.querySelector(`.viewport.vp-${vp}`);
+  if (!originalWrapper) throw new Error('Viewport not found');
+
+  // Clone the wrapper (so the .vp-desktop / .vp-tablet / .vp-mobile class
+  // context is preserved — CSS selectors target those classes for width/zoom).
+  // Then move it far off-screen and override zoom so capture is at full
+  // native resolution. Capture only the inner .vp-frame so we don't include
+  // the label.
+  const wrapperClone = originalWrapper.cloneNode(true);
+  wrapperClone.classList.remove('hidden');                 // ensure visible
+  wrapperClone.style.position = 'absolute';
+  wrapperClone.style.top = '0';
+  wrapperClone.style.left = '-100000px';
+  wrapperClone.style.margin = '0';
+  wrapperClone.style.display = 'flex';                     // force flex layout
+  wrapperClone.style.opacity = '1';
+  wrapperClone.style.pointerEvents = 'none';
+  // Override zoom on the cloned .vp-frame inside the wrapper
+  const cloneFrame = wrapperClone.querySelector('.vp-frame');
+  cloneFrame.style.zoom = '1';
+  // Drop the label so it's not in the capture
+  const cloneLabel = wrapperClone.querySelector('.vp-label');
+  if (cloneLabel) cloneLabel.remove();
+
+  document.body.appendChild(wrapperClone);
+  await new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r)));
+
+  // Watermark on the cloned frame
+  const wm = document.createElement('div');
+  wm.style.cssText = 'position:absolute;bottom:10px;right:14px;background:rgba(0,0,0,0.65);color:#fff;font:11px/1.4 monospace;padding:4px 9px;border-radius:3px;z-index:9999;letter-spacing:0.5px;';
+  const date = new Date().toISOString().slice(0,10);
+  wm.textContent = `NGG Layout · ${vp.toUpperCase()} · ${date}`;
+  cloneFrame.appendChild(wm);
+
+  try {
+    if (cloneFrame.scrollWidth === 0 || cloneFrame.scrollHeight === 0) {
+      throw new Error('Cloned viewport has 0 size — layout may be empty');
+    }
+    const canvas = await html2canvas(cloneFrame, {
+      backgroundColor: '#ffffff',
+      scale: 1,
+      logging: false,
+      useCORS: true,
+      windowWidth: cloneFrame.scrollWidth,
+      windowHeight: cloneFrame.scrollHeight,
+      width: cloneFrame.scrollWidth,
+      height: cloneFrame.scrollHeight,
+    });
+    return { canvas, date };
+  } finally {
+    wrapperClone.remove();
+  }
+}
+
+async function refreshImagePreview(vp) {
+  const prev = document.getElementById('image-preview');
+  if (!prev) return;
+  prev.innerHTML = `<div style="font-size:12px;color:var(--text-muted);text-align:center;line-height:1.6;">⏳ Capturing ${vp}...</div>`;
+  try {
+    const { canvas, date } = await captureViewport(vp);
+    _lastCapture = { vp, canvas, date };
+    const dataUrl = canvas.toDataURL('image/jpeg', 0.7);  // lower quality for preview
+    prev.innerHTML = `
+      <div style="text-align:center;width:100%;">
+        <img src="${dataUrl}" style="max-width:100%;max-height:380px;height:auto;border:1px solid var(--border);border-radius:4px;display:block;margin:0 auto;">
+        <div style="font-size:10px;font-family:'JetBrains Mono',monospace;color:var(--text-subtle);margin-top:8px;">
+          ${canvas.width} × ${canvas.height} px · JPG 92% · with watermark
+        </div>
+      </div>`;
+  } catch (e) {
+    console.error(e);
+    _lastCapture = null;
+    prev.innerHTML = `<div style="font-size:12px;color:var(--brand);text-align:center;line-height:1.6;">⚠ Capture failed<br><span style="font-size:11px;color:var(--text-muted);">${escapeHtml(e.message)}</span></div>`;
+  }
+}
+
+async function exportImage(vp) {
+  // Reuse cached canvas if it matches the requested viewport
+  let cap = _lastCapture && _lastCapture.vp === vp ? _lastCapture : null;
+  if (!cap) {
+    try { cap = await captureViewport(vp); _lastCapture = { vp, ...cap }; }
+    catch (e) { toast(e.message, 'error'); return; }
+  }
+  cap.canvas.toBlob(blob => {
+    if (!blob) { toast('Failed to encode image', 'error'); return; }
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `ngg-layout-${cap.vp}-${cap.date}.jpg`;
+    a.style.display = 'none';
+    document.body.appendChild(a);
+    a.click();
+    // Defer cleanup so the browser has time to start the download
+    setTimeout(() => { a.remove(); URL.revokeObjectURL(url); }, 1500);
+    toast(t('toast_image_exported'), 'success');
+  }, 'image/jpeg', 0.92);
+}
+
+function updateExportText() {
+  const includeImages = document.getElementById('opt-include-images').checked;
+  const data = {
+    version: '1.0',
+    project: 'NGG Homepage',
+    exportedAt: new Date().toISOString(),
+    layout: state.layout.map((inst, i) => {
+      const def = SECTIONS[inst.sectionId];
+      return {
+        order: i + 1,
+        sectionId: inst.sectionId,
+        name: def.name.en,
+        note: inst.note || '',
+        texts: inst.texts && Object.keys(inst.texts).length ? Object.assign({}, inst.texts) : undefined,
+        images: (def.images || []).map((spec, k) => {
+          const slot = normalizeImageSlot(inst.images[k]);
+          const effSpec = getImageSpec(inst, k);
+          const out = {
+            name: spec.name,
+            w: effSpec.w,
+            h: effSpec.h,
+            baseW: spec.w,
+            baseH: spec.h,
+            format: spec.format,
+            customRatio: !!(slot.customW && slot.customH),
+            variants: {
+              desktop: !!slot.desktop,
+              tablet:  !!slot.tablet,
+              mobile:  !!slot.mobile,
+            }
+          };
+          if (includeImages) {
+            out.uploads = {};
+            ['desktop','tablet','mobile'].forEach(d => {
+              if (slot[d]) out.uploads[d] = slot[d];
+            });
+          }
+          return out;
+        })
+      };
+    })
+  };
+  document.getElementById('modal-textarea').value = JSON.stringify(data, null, 2);
+}
+
+function closeModal() {
+  document.getElementById('modal').classList.remove('active');
+  modalMode = null;
+  _lastCapture = null;
+}
+
+/* ============================================================
+   IMPORT / EXPORT
+   ============================================================ */
+function applyImport() {
+  const ta = document.getElementById('modal-textarea');
+  try {
+    const data = JSON.parse(ta.value);
+    if (!data.layout || !Array.isArray(data.layout)) throw new Error('invalid');
+    const newLayout = [];
+    data.layout.forEach(item => {
+      const def = SECTIONS[item.sectionId];
+      if (!def) return;
+      const inst = makeInstance(item.sectionId);
+      inst.note = item.note || '';
+      if (item.texts && typeof item.texts === 'object') inst.texts = Object.assign({}, item.texts);
+      if (Array.isArray(item.images)) {
+        item.images.forEach((im, k) => {
+          if (k >= inst.images.length) return;
+          const slot = makeImageSlot();
+          if (im && im.uploads) {
+            ['desktop','tablet','mobile'].forEach(d => {
+              if (im.uploads[d] && im.uploads[d].dataUrl) slot[d] = im.uploads[d];
+            });
+          } else if (im && im.dataUrl) {
+            slot.desktop = { dataUrl: im.dataUrl, w: im.uploadedW || im.w, h: im.uploadedH || im.h };
+          }
+          if (im && im.customRatio && im.w && im.h && im.baseW && im.baseH && (im.w !== im.baseW || im.h !== im.baseH)) {
+            slot.customW = im.w; slot.customH = im.h;
+          }
+          inst.images[k] = slot;
+        });
+      }
+      newLayout.push(inst);
+    });
+    if (newLayout.length === 0) throw new Error('empty');
+    pushHistory();
+    state.layout = newLayout;
+    state.selectedId = null;
+    render();
+    closeModal();
+    toast(t('toast_imported'), 'success');
+  } catch (e) {
+    toast(t('toast_invalid'), 'error');
+  }
+}
+
+function copyExport() {
+  const ta = document.getElementById('modal-textarea');
+  ta.select();
+  try {
+    navigator.clipboard.writeText(ta.value);
+    toast(t('toast_exported'), 'success');
+  } catch (e) {
+    document.execCommand('copy');
+    toast(t('toast_exported'), 'success');
+  }
+}
+
+/* ============================================================
+   WELCOME / TEMPLATE PICKER
+   ============================================================ */
+function openWelcome() {
+  state.welcomePT = state.pageType || 'homepage';
+  document.getElementById('welcome-modal').classList.add('active');
+  // show "Save current" button only when there's something to save
+  document.getElementById('welcome-save-current').style.display =
+    state.layout.length > 0 ? '' : 'none';
+  renderWelcome();
+}
+function closeWelcome() { document.getElementById('welcome-modal').classList.remove('active'); }
+
+function renderWelcome() {
+  // active tab styling
+  document.querySelectorAll('.welcome-tab').forEach(b =>
+    b.classList.toggle('active', b.dataset.pt === state.welcomePT));
+  const body = document.getElementById('welcome-body');
+  const pt = state.welcomePT;
+
+  let cards = '';
+  const list = TEMPLATES[pt] || [];
+  cards += `<div class="tmpl-grid">` +
+    list.map(t => templateCard(t, pt)).join('') +
+    `</div>`;
+
+  if (pt === 'custom') {
+    const custom = getCustomTemplates();
+    cards += `<div style="margin-top:24px;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.6px;color:var(--text-muted);">${t('custom_templates')}</div>`;
+    if (custom.length === 0) {
+      cards += `<div style="margin-top:10px;font-size:12px;color:var(--text-subtle);padding:14px;background:var(--panel-2);border-radius:6px;text-align:center;">${t('no_custom')}</div>`;
+    } else {
+      cards += `<div class="tmpl-grid" style="margin-top:10px;">` +
+        custom.map(c => templateCard(c, c.pageType || 'custom', true)).join('') + `</div>`;
+    }
+  }
+
+  body.innerHTML = cards;
+
+  body.querySelectorAll('.tmpl-card').forEach(card => {
+    card.addEventListener('click', e => {
+      if (e.target.closest('.tmpl-card-delete')) return;
+      const tid = card.dataset.tid;
+      const ptype = card.dataset.pt;
+      applyTemplate(tid, ptype);
+    });
+  });
+  body.querySelectorAll('.tmpl-card-delete').forEach(btn => {
+    btn.addEventListener('click', e => {
+      e.stopPropagation();
+      const tid = btn.dataset.tid;
+      deleteCustomTemplate(tid);
+      renderWelcome();
+      toast(t('template_deleted'));
+    });
+  });
+}
+
+function templateCard(tmpl, ptype, isCustom = false) {
+  const count = (tmpl.sections || []).length;
+  return `<div class="tmpl-card" data-tid="${tmpl.id}" data-pt="${ptype}">
+    <div class="tmpl-card-preview">${templatePreview(tmpl.sections || [])}</div>
+    <div class="tmpl-card-body">
+      <div class="tmpl-card-name">${escapeHtml(tmpl.name[state.lang] || tmpl.name.en)}</div>
+      <div class="tmpl-card-desc">${escapeHtml(tmpl.desc[state.lang] || tmpl.desc.en || '')}</div>
+      <div class="tmpl-card-meta">
+        <span class="tmpl-card-count">${count} ${count===1?'section':'sections'}</span>
+        ${isCustom ? `<button class="tmpl-card-delete" data-tid="${tmpl.id}" title="Delete">✕</button>` : ''}
+      </div>
+    </div>
+  </div>`;
+}
+
+function findTemplate(id) {
+  const customs = getCustomTemplates();
+  for (const c of customs) if (c.id === id) return { tmpl: c, pt: c.pageType || 'custom', isCustom: true };
+  for (const cat of ['homepage','landing','custom']) {
+    for (const t of (TEMPLATES[cat] || [])) if (t.id === id) return { tmpl: t, pt: cat, isCustom: false };
+  }
+  return null;
+}
+
+function applyTemplate(id, ptype) {
+  const found = findTemplate(id);
+  if (!found) return;
+  if (state.layout.length > 0 && !confirm(t('confirm_apply'))) return;
+  pushHistory();
+  state.layout = (found.tmpl.sections || []).map(sid => makeInstance(sid)).filter(Boolean);
+  state.selectedId = null;
+  // Set page type — 'custom' template + blank stays as 'custom'
+  state.pageType = ptype === 'custom' ? (found.tmpl.sections.length === 0 ? 'custom' : (found.tmpl.pageType || 'custom')) : ptype;
+  closeWelcome();
+  render();
+  toast(t('template_applied'), 'success');
+}
+
+function saveCurrentAsTemplate() {
+  const name = prompt(t('template_name_prompt'), '');
+  if (!name) return;
+  const sections = state.layout.map(x => x.sectionId);
+  saveCustomTemplate(name.trim(), sections, state.pageType || 'custom');
+  toast(t('template_saved'), 'success');
+  state.welcomePT = 'custom';
+  renderWelcome();
+}
+
+/* ============================================================
+   RESET
+   ============================================================ */
+function resetLayout() {
+  if (!confirm(t('confirm_reset'))) return;
+  pushHistory();
+  state.layout = NGG_DEFAULT.map(id => makeInstance(id));
+  state.selectedId = null;
+  render();
+  toast(t('toast_reset'));
+}
+
+/* ============================================================
+   EVENT BINDINGS
+   ============================================================ */
+function bindEvents() {
+  // language
+  document.querySelectorAll('[data-lang-set]').forEach(b => b.addEventListener('click', () => {
+    state.lang = b.dataset.langSet; render();
+  }));
+  // theme
+  document.querySelectorAll('[data-theme-set]').forEach(b => b.addEventListener('click', () => {
+    state.theme = b.dataset.themeSet; render();
+  }));
+  // library tabs
+  document.querySelectorAll('.lib-tab').forEach(b => b.addEventListener('click', () => {
+    state.cat = b.dataset.cat; render();
+  }));
+  // viewport tabs
+  document.querySelectorAll('.vp-tab').forEach(b => b.addEventListener('click', () => {
+    state.vp = b.dataset.vp; render();
+  }));
+  // search
+  document.getElementById('lib-search-input').addEventListener('input', e => {
+    state.search = e.target.value; renderLibrary();
+  });
+  // topbar
+  document.getElementById('btn-reset').addEventListener('click', resetLayout);
+  document.getElementById('btn-new').addEventListener('click', openWelcome);
+  document.getElementById('welcome-close').addEventListener('click', closeWelcome);
+  document.getElementById('welcome-modal').addEventListener('click', e => {
+    if (e.target.id === 'welcome-modal') closeWelcome();
+  });
+  document.querySelectorAll('.welcome-tab').forEach(b => b.addEventListener('click', () => {
+    state.welcomePT = b.dataset.pt;
+    renderWelcome();
+  }));
+  document.getElementById('welcome-save-current').addEventListener('click', saveCurrentAsTemplate);
+  document.getElementById('pt-filter-toggle').addEventListener('change', e => {
+    state.ptFilter = e.target.checked;
+    renderLibrary();
+  });
+  document.getElementById('btn-export').addEventListener('click', () => openModal('export'));
+  document.getElementById('btn-import').addEventListener('click', () => openModal('import'));
+  document.getElementById('btn-undo').addEventListener('click', undo);
+  document.getElementById('btn-redo').addEventListener('click', redo);
+  document.getElementById('btn-zoom-in').addEventListener('click', () => setZoom(state.zoom + 0.1));
+  document.getElementById('btn-zoom-out').addEventListener('click', () => setZoom(state.zoom - 0.1));
+  document.getElementById('btn-zoom-reset').addEventListener('click', () => setZoom(1));
+
+  /* spacebar pan */
+  const scroll = document.getElementById('canvas-scroll');
+  let panStart = null;
+  document.addEventListener('keydown', e => {
+    if (e.code === 'Space') {
+      const tag = document.activeElement.tagName;
+      if (tag === 'INPUT' || tag === 'TEXTAREA' || document.activeElement.isContentEditable) return;
+      if (!document.body.classList.contains('space-down')) {
+        document.body.classList.add('space-down');
+      }
+      e.preventDefault();
+    }
+  });
+  document.addEventListener('keyup', e => {
+    if (e.code === 'Space') {
+      document.body.classList.remove('space-down');
+      document.body.classList.remove('panning');
+      panStart = null;
+    }
+  });
+  scroll.addEventListener('mousedown', e => {
+    if (!document.body.classList.contains('space-down')) return;
+    e.preventDefault();
+    document.body.classList.add('panning');
+    panStart = { x: e.clientX, y: e.clientY, sl: scroll.scrollLeft, st: scroll.scrollTop };
+  });
+  document.addEventListener('mousemove', e => {
+    if (!panStart) return;
+    scroll.scrollLeft = panStart.sl - (e.clientX - panStart.x);
+    scroll.scrollTop  = panStart.st - (e.clientY - panStart.y);
+  });
+  document.addEventListener('mouseup', () => {
+    document.body.classList.remove('panning');
+    panStart = null;
+  });
+  /* Ctrl/Cmd + wheel zoom */
+  scroll.addEventListener('wheel', e => {
+    if (e.ctrlKey || e.metaKey) {
+      e.preventDefault();
+      const delta = -Math.sign(e.deltaY) * 0.1;
+      setZoom(state.zoom + delta);
+    }
+  }, { passive: false });
+  // modal
+  document.getElementById('modal-close').addEventListener('click', closeModal);
+  document.getElementById('modal').addEventListener('click', e => {
+    if (e.target.id === 'modal') closeModal();
+  });
+  document.getElementById('modal-action').addEventListener('click', () => {
+    if (modalMode === 'export') {
+      if (exportFormat === 'image') exportImage(exportImageVp);
+      else copyExport();
+    } else {
+      applyImport();
+    }
+  });
+  document.querySelectorAll('#format-tabs .fmt-tab').forEach(b => {
+    b.addEventListener('click', () => setExportFormat(b.dataset.fmt));
+  });
+  document.querySelectorAll('#img-vp-tabs .vp-tab').forEach(b => {
+    b.addEventListener('click', () => {
+      exportImageVp = b.dataset.imgvp;
+      document.querySelectorAll('#img-vp-tabs .vp-tab').forEach(x => x.classList.toggle('active', x === b));
+      _lastCapture = null;
+      refreshImagePreview(exportImageVp);
+    });
+  });
+  document.getElementById('modal-copy').addEventListener('click', () => {
+    document.getElementById('modal-textarea').select();
+    document.execCommand('copy');
+    toast(t('toast_exported'));
+  });
+  document.getElementById('opt-include-images').addEventListener('change', updateExportText);
+
+  // keyboard
+  document.addEventListener('keydown', e => {
+    const isInput = ['INPUT','TEXTAREA'].includes(document.activeElement.tagName);
+    if (isInput) return;
+    if ((e.metaKey || e.ctrlKey) && e.key === 'z' && !e.shiftKey) { e.preventDefault(); undo(); }
+    else if ((e.metaKey || e.ctrlKey) && (e.key === 'Z' || (e.key === 'z' && e.shiftKey))) { e.preventDefault(); redo(); }
+    else if ((e.metaKey || e.ctrlKey) && (e.key === '=' || e.key === '+')) { e.preventDefault(); setZoom(state.zoom + 0.1); }
+    else if ((e.metaKey || e.ctrlKey) && e.key === '-') { e.preventDefault(); setZoom(state.zoom - 0.1); }
+    else if ((e.metaKey || e.ctrlKey) && e.key === '0') { e.preventDefault(); setZoom(1); }
+    else if ((e.metaKey || e.ctrlKey) && e.key === 'd') {
+      e.preventDefault();
+      const inst = state.layout.find(x => x.id === state.selectedId);
+      if (inst) {
+        const idx = state.layout.indexOf(inst);
+        pushHistory();
+        const copy = JSON.parse(JSON.stringify(inst));
+        copy.id = nextId();
+        state.layout.splice(idx+1, 0, copy);
+        state.selectedId = copy.id;
+        render(); toast(t('toast_duplicated'));
+      }
+    }
+    else if ((e.key === 'Delete' || e.key === 'Backspace') && state.selectedId) {
+      e.preventDefault();
+      const idx = state.layout.findIndex(x => x.id === state.selectedId);
+      if (idx >= 0) {
+        pushHistory();
+        state.layout.splice(idx, 1);
+        state.selectedId = null;
+        render(); toast(t('toast_removed'));
+      }
+    }
+    else if (e.key === 'Escape') {
+      closeModal();
+      closeWelcome();
+      state.selectedId = null;
+      render();
+    }
+  });
+}
+
+/* ============================================================
+   INIT
+   ============================================================ */
+function init() {
+  const restored = loadPersisted();
+  bindEvents();
+  setupDropZones();
+  render();
+  if (!restored) {
+    // First-time visitor: show template picker. ESC or close starts blank-with-NGG.
+    openWelcome();
+  }
+}
+
+init();
+</script>
+</body>
+</html>
