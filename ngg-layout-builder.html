@@ -1665,21 +1665,74 @@ function img(name, w, h, format, note_en, note_th) {
   return { name, w, h, format: format || 'JPG/WebP', note_en: note_en || '', note_th: note_th || '' };
 }
 
+/* NGG brand logo (same as topbar) — reusable inline SVG */
+function nggLogoSVG(height, color) {
+  color = color || '#AA182C';
+  return `<svg viewBox="0 0 478 274" height="${height}" style="width:auto;display:block;" fill="${color}" xmlns="http://www.w3.org/2000/svg" aria-label="NGG">
+    <path d="M125.985 155.745C126.058 151.554 127.564 147.515 130.251 144.303C132.938 141.091 136.644 138.901 140.749 138.099H99.4099C103.715 138.788 107.612 141.053 110.346 144.456C112.953 147.518 114.421 151.391 114.502 155.416V239.591L27.0124 137.879H0C4.32319 138.517 8.23762 140.792 10.9362 144.236C13.6067 147.269 15.1179 151.153 15.2013 155.197V251.209C15.0993 255.249 13.5905 259.126 10.9362 262.169C8.16853 265.533 4.28764 267.789 0 268.526H41.2294C36.9517 267.761 33.0797 265.511 30.2932 262.169C27.7096 259.093 26.2444 255.228 26.1375 251.209V163.307L116.908 269.403H125.547L125.985 155.745Z"/>
+    <path d="M271.673 209.002H241.27C245.558 209.74 249.439 211.996 252.207 215.359C254.806 218.427 256.273 222.297 256.362 226.32V256.241C252.216 258.126 247.893 259.595 243.458 260.625C229.286 264.038 214.36 262.168 201.463 255.364C192.813 250.931 185.633 244.078 180.793 235.636C175.42 225.53 172.745 214.203 173.029 202.755C172.812 192.036 175.096 181.415 179.7 171.737C183.912 163.276 190.535 156.258 198.729 151.571C207.747 146.666 217.889 144.21 228.147 144.446C236.295 144.406 244.33 146.362 251.55 150.146C258.798 153.885 264.858 159.579 269.048 166.586L271.345 170.751V143.679H270.798C265.286 140.769 259.449 138.525 253.41 136.993C245.282 134.795 236.893 133.726 228.475 133.815C215.122 133.586 201.925 136.714 190.089 142.912C179.313 148.524 170.303 157.023 164.061 167.463C157.9 178.548 154.734 191.053 154.875 203.741C154.48 217.258 157.85 230.618 164.608 242.322C170.749 252.573 179.71 260.831 190.417 266.105C201.203 271.403 213.074 274.105 225.085 273.997C233.255 273.936 241.382 272.794 249.254 270.599C256.956 268.318 264.314 264.999 271.126 260.735V226.539C271.298 222.513 272.798 218.658 275.391 215.579C278.146 212.2 282.033 209.94 286.328 209.222L271.673 209.002Z"/>
+    <path d="M422.707 209.002H392.305C396.592 209.74 400.473 211.996 403.241 215.359C405.84 218.427 407.307 222.297 407.397 226.32V256.241C403.25 258.126 398.927 259.595 394.492 260.625C380.32 264.038 365.394 262.168 352.497 255.364C343.847 250.931 336.667 244.078 331.827 235.636C326.454 225.53 323.779 214.203 324.063 202.755C323.846 192.036 326.13 181.415 330.734 171.737C334.915 163.043 341.626 155.821 349.982 151.023C359 146.118 369.142 143.662 379.4 143.898C387.705 143.972 395.862 146.119 403.131 150.146C410.378 153.885 416.439 159.579 420.629 166.586L422.926 170.751V143.679C417.137 140.703 411.003 138.457 404.662 136.993C396.534 134.802 388.145 133.733 379.728 133.815C366.375 133.586 353.178 136.714 341.342 142.912C330.534 148.69 321.556 157.384 315.423 168.011C309.354 178.934 306.19 191.239 306.237 203.741C305.842 217.258 309.212 230.618 315.97 242.322C322.096 252.545 331.014 260.798 341.67 266.105C352.499 271.393 364.402 274.094 376.447 273.997C384.618 273.936 392.744 272.794 400.616 270.599C408.318 268.318 415.676 264.999 422.488 260.735V226.539C422.617 222.504 424.123 218.636 426.754 215.579C429.508 212.2 433.395 209.94 437.69 209.222L422.707 209.002Z"/>
+    <path d="M422.925 0C420.957 46.2524 414.395 52.8286 368.244 54.8014C414.395 56.7743 420.957 63.3504 422.925 109.603C424.894 63.3504 431.455 56.7743 477.606 54.8014C431.455 52.8286 424.894 46.2524 422.925 0Z"/>
+  </svg>`;
+}
+
+/* Thin-line nav icons used in the site header */
+const NAV_ICONS = {
+  search: `<svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>`,
+  bag: `<svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4zM3 6h18M16 10a4 4 0 0 1-8 0"/></svg>`,
+  account: `<svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>`,
+  location: `<svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>`,
+};
+
 const SECTIONS = {
   /* ----------- NGG SECTIONS ----------- */
   header: {
     cat: 'ngg',
     name: { en: 'Site Header', th: 'หัวเว็บไซต์' },
-    desc: { en: 'Top navigation bar with logo and menu', th: 'แถบนำทางด้านบนพร้อมโลโก้และเมนู' },
+    desc: { en: 'Top navigation bar with logo, menu and icons', th: 'แถบนำทางด้านบน โลโก้ เมนู และไอคอน' },
     images: [],
-    notes: { en: 'Sticky on scroll. Logo left, menu center, account/cart right.', th: 'ติดด้านบนเมื่อเลื่อน โลโก้ซ้าย เมนูกลาง บัญชี/ตะกร้าขวา' },
-    render: (vp) => {
+    texts: {
+      tagline: { label: { en: 'Logo tagline', th: 'คำต่อท้ายโลโก้' }, default: { en: 'JEWELLERY', th: 'JEWELLERY' } },
+      nav1: { label: { en: 'Menu 1', th: 'เมนู 1' }, default: { en: 'Exclusive', th: 'Exclusive' } },
+      nav2: { label: { en: 'Menu 2', th: 'เมนู 2' }, default: { en: 'Jewellery', th: 'เครื่องประดับ' } },
+      nav3: { label: { en: 'Menu 3', th: 'เมนู 3' }, default: { en: 'Gold', th: 'ทองคำ' } },
+      nav4: { label: { en: 'Menu 4', th: 'เมนู 4' }, default: { en: 'Collections', th: 'คอลเลกชัน' } },
+      nav5: { label: { en: 'Menu 5', th: 'เมนู 5' }, default: { en: 'Engagement & Wedding', th: 'งานหมั้น & งานแต่งงาน' } },
+      nav6: { label: { en: 'Menu 6', th: 'เมนู 6' }, default: { en: 'Articles', th: 'บทความ' } },
+    },
+    notes: { en: 'Sticky on scroll. Logo left, menu center, icons (lang/search/bag/account/location) right. "Exclusive" highlighted in brand red italic.', th: 'ติดด้านบนเมื่อเลื่อน โลโก้ซ้าย เมนูกลาง ไอคอน (ภาษา/ค้นหา/ตะกร้า/บัญชี/สาขา) ขวา "Exclusive" เน้นสีแดงตัวเอียง' },
+    render: (vp, sec) => {
       const isM = vp === 'mobile';
-      return `<div class="s-block" style="background:#fff;border-bottom:1px solid #eee;padding:${isM?'12px 16px':'16px 60px'};display:flex;align-items:center;justify-content:space-between;">
-        <div style="font-weight:700;font-size:${isM?14:18}px;letter-spacing:1px;color:#AA182C;">NGG</div>
-        ${isM ? '<div style="font-size:18px;">☰</div>' :
-          '<div style="display:flex;gap:24px;font-size:13px;color:#333;"><span>Shop</span><span>Brands</span><span>Promotion</span><span>About</span><span>Contact</span></div>'}
-        <div style="display:flex;gap:14px;font-size:14px;">🔍 ${isM?'':'❤ '}🛒</div>
+      const isT = vp === 'tablet';
+      const logo = `<div style="display:flex;align-items:center;gap:10px;">
+        ${nggLogoSVG(isM ? 22 : 28)}
+        <span style="font-family:Georgia,serif;font-size:${isM?9:11}px;letter-spacing:2px;color:#888;text-transform:uppercase;">${etxt(sec,'tagline')}</span>
+      </div>`;
+      const icons = `<div style="display:flex;align-items:center;gap:${isM?12:16}px;color:#555;">
+        <span style="font-size:12px;border:1px solid #ccc;padding:3px 8px;border-radius:4px;">TH</span>
+        ${NAV_ICONS.search}${isM?'':NAV_ICONS.bag}${isM?'':NAV_ICONS.account}${NAV_ICONS.location}
+      </div>`;
+
+      if (isM) {
+        return `<div class="s-block" style="background:#fff;border-bottom:1px solid #eee;padding:12px 16px;display:flex;align-items:center;justify-content:space-between;">
+          ${logo}
+          <div style="display:flex;align-items:center;gap:14px;color:#555;">${NAV_ICONS.search}<span style="font-size:20px;line-height:1;">☰</span></div>
+        </div>`;
+      }
+
+      const navItems = [
+        `<span style="color:#7B1F2E;font-family:Georgia,serif;font-style:italic;font-weight:600;">${etxt(sec,'nav1')}</span>`,
+        `<span>${etxt(sec,'nav2')}</span>`,
+        `<span>${etxt(sec,'nav3')}</span>`,
+        `<span>${etxt(sec,'nav4')}</span>`,
+        `<span>${etxt(sec,'nav5')}</span>`,
+        `<span>${etxt(sec,'nav6')}</span>`,
+      ].join('');
+
+      return `<div class="s-block" style="background:#fff;border-bottom:1px solid #eee;padding:${isT?'16px 24px':'18px 48px'};display:flex;align-items:center;justify-content:space-between;gap:16px;">
+        ${logo}
+        <div style="display:flex;gap:${isT?16:28}px;font-size:${isT?12:14}px;font-weight:500;color:#555;white-space:nowrap;">${navItems}</div>
+        ${icons}
       </div>`;
     }
   },
@@ -2296,6 +2349,12 @@ const TEMPLATES = {
       name: { en: 'NGG Hi-Fi Homepage', th: 'NGG หน้าแรกฉบับเต็ม' },
       desc: { en: 'Full hi-fi prototype: hero, brand story, collections, brands, best sellers, craftsmanship, gift guide, news, gold investment', th: 'โปรโตไทป์ฉบับเต็ม: hero, brand story, คอลเลกชัน, แบรนด์, สินค้าขายดี, งานฝีมือ, ของขวัญ, ข่าวสาร, ลงทุนทองคำ' },
       sections: ['header','hero','text_section','stats','tall_grid_3','feature_grid_3','product_grid_4','feature_image_text','square_grid_3','blog_cards','promo_text_split','footer'],
+    },
+    {
+      id: 'hamilton',
+      name: { en: 'Hamilton Style', th: 'สไตล์ Hamilton' },
+      desc: { en: 'Luxury jeweler layout (à la Hamilton): hero, category tiles, collection banners, featured products, appointment, magazine, brand story, newsletter', th: 'เลย์เอาต์ร้านเครื่องประดับหรู (แบบ Hamilton): hero, หมวดสินค้า, แบนเนอร์คอลเลกชัน, สินค้าเด่น, นัดหมาย, นิตยสาร, เรื่องราวแบรนด์, จดหมายข่าว' },
+      sections: ['header','hero','square_grid_3','feature_grid_3','product_grid_4','sub_banner','feature_image_text','promo_text_split','newsletter','footer'],
     },
   ],
   landing: [
