@@ -6,29 +6,31 @@
 <title>NGG Layout Builder</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&family=Prompt:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <!-- html2canvas-pro is a maintained fork with proper support for modern CSS
      (aspect-ratio, CSS grid, color functions). Used for JPG export. -->
 <script src="https://cdn.jsdelivr.net/npm/html2canvas-pro@1.5.8/dist/html2canvas-pro.min.js" defer></script>
 <style>
 :root {
-  /* Light theme (VibeUI-inspired) */
-  --bg: #fafafa;
+  /* Light theme — aligned to Store Locator design.md (editorial / luxury) */
+  --bg: #ffffff;
   --panel: #ffffff;
-  --panel-2: #f5f5f5;
-  --panel-hover: #f0f0f0;
-  --border: #e5e7eb;
-  --border-strong: #d1d5db;
-  --text: #111111;
-  --text-muted: #6b7280;
-  --text-subtle: #9ca3af;
-  --accent: #C7B695;
-  --accent-strong: #907962;
-  --accent-soft: #F6DAAB;
-  --brand: #AA182C;
-  --brand-soft: #fee2e4;
+  --panel-2: #f7f7f7;
+  --panel-hover: #f0eeeb;
+  --border: #D9D9D9;          /* neutral-200 */
+  --border-strong: #C5C5C5;   /* neutral-300 */
+  --text: #31353F;            /* neutral-800 / text-primary */
+  --text-muted: #606161;      /* neutral-700 / text-secondary */
+  --text-subtle: #8E8E8E;     /* neutral-500 / text-tertiary */
+  --accent: #907962;          /* gold-text */
+  --accent-strong: #7a6450;
+  --accent-soft: #F6DAAB;     /* gold-surface */
+  --brand: #7B1F2E;           /* burgundy (luxury) */
+  --brand-soft: #f3e3e6;
+  --ink: #1A1A1A;             /* solid black for editorial buttons */
   --canvas-bg: #ececec;
   --viewport-bg: #ffffff;
+  --font-serif: 'Playfair Display', Georgia, serif;
   --shadow-sm: 0 1px 2px rgba(0,0,0,0.04);
   --shadow: 0 1px 3px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.04);
   --shadow-lg: 0 8px 24px rgba(0,0,0,0.10);
@@ -53,8 +55,10 @@
   --accent-soft: #907962;
   --brand: #AA182C;
   --brand-soft: #3a0d12;
+  --ink: #e6e8ee;
   --canvas-bg: #050608;
   --viewport-bg: #ffffff;
+  --font-serif: 'Playfair Display', Georgia, serif;
   --shadow-sm: 0 1px 2px rgba(0,0,0,0.3);
   --shadow: 0 1px 3px rgba(0,0,0,0.4);
   --shadow-lg: 0 8px 24px rgba(0,0,0,0.5);
@@ -109,9 +113,10 @@ input, textarea { font-family: inherit; }
 [data-theme="dark"] .logo-mark { fill: #ff4a5c; }
 .logo-text {
   color: var(--text);
+  font-family: var(--font-serif);
   font-weight: 500;
-  font-size: 13px;
-  letter-spacing: 0.2px;
+  font-size: 15px;
+  letter-spacing: 0.5px;
 }
 .logo-sub {
   color: var(--text-muted);
@@ -123,28 +128,30 @@ input, textarea { font-family: inherit; }
 .topbar-spacer { flex: 1; }
 
 .tb-btn {
-  height: 32px;
-  padding: 0 12px;
-  border-radius: 6px;
-  font-size: 13px;
+  height: 34px;
+  padding: 0 14px;
+  border-radius: 0;
+  font-size: 11px;
   font-weight: 500;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
   display: inline-flex;
   align-items: center;
   gap: 6px;
   background: transparent;
   color: var(--text);
   border: 1px solid var(--border);
-  transition: all 0.15s;
+  transition: all 0.2s;
 }
 .tb-btn:hover { background: var(--panel-hover); border-color: var(--border-strong); }
 .tb-btn.primary {
-  background: var(--accent);
-  border-color: var(--accent);
-  color: #fff;
+  background: var(--ink);
+  border-color: var(--ink);
+  color: var(--panel);
 }
-.tb-btn.primary:hover { background: var(--accent-strong); border-color: var(--accent-strong); }
+.tb-btn.primary:hover { opacity: 0.82; background: var(--ink); border-color: var(--ink); }
 .tb-btn.danger:hover { background: var(--brand-soft); border-color: var(--brand); color: var(--brand); }
-.tb-btn.icon-only { width: 32px; padding: 0; justify-content: center; }
+.tb-btn.icon-only { width: 34px; padding: 0; justify-content: center; }
 
 .lang-toggle, .theme-toggle {
   display: inline-flex;
@@ -195,8 +202,8 @@ input, textarea { font-family: inherit; }
   font-size: 11px;
   font-weight: 600;
   text-transform: uppercase;
-  letter-spacing: 0.8px;
-  color: var(--text-muted);
+  letter-spacing: 4px;
+  color: var(--accent);
 }
 
 /* ===== Library ===== */
@@ -206,36 +213,42 @@ input, textarea { font-family: inherit; }
 }
 .lib-search input {
   width: 100%;
-  height: 32px;
-  padding: 0 10px;
-  background: var(--panel-2);
-  border: 1px solid var(--border);
-  border-radius: 6px;
-  font-size: 12px;
+  height: 36px;
+  padding: 0 2px;
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid var(--border);
+  border-radius: 0;
+  font-size: 13px;
   color: var(--text);
   outline: none;
-  transition: border-color 0.15s;
+  transition: border-color 0.2s;
 }
-.lib-search input:focus { border-color: var(--accent); }
+.lib-search input::placeholder { color: var(--text-subtle); }
+.lib-search input:focus { border-bottom-color: var(--ink); }
 
 .lib-tabs {
   display: flex;
-  gap: 4px;
-  padding: 8px 10px;
+  gap: 18px;
+  padding: 4px 14px 0;
   border-bottom: 1px solid var(--border);
 }
 .lib-tab {
-  flex: 1;
-  height: 28px;
-  border-radius: 5px;
+  padding: 6px 0 10px;
+  border: none;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -1px;
+  border-radius: 0;
   font-size: 11px;
   font-weight: 500;
-  color: var(--text-muted);
-  background: var(--panel-2);
-  transition: all 0.15s;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: var(--text-subtle);
+  background: transparent;
+  transition: all 0.2s;
 }
-.lib-tab.active { background: var(--accent); color: #fff; }
-.lib-tab:hover:not(.active) { background: var(--panel-hover); color: var(--text); }
+.lib-tab.active { border-bottom-color: var(--ink); color: var(--text); }
+.lib-tab:hover:not(.active) { color: var(--text); }
 
 .lib-list {
   flex: 1;
@@ -246,25 +259,25 @@ input, textarea { font-family: inherit; }
   font-size: 10px;
   font-weight: 600;
   text-transform: uppercase;
-  letter-spacing: 0.6px;
-  color: var(--text-subtle);
-  padding: 8px 8px 4px;
+  letter-spacing: 3px;
+  color: var(--accent);
+  padding: 10px 8px 6px;
 }
 
 .lib-item {
-  padding: 9px 10px;
-  border-radius: 6px;
+  padding: 10px 11px;
+  border-radius: 0;
   border: 1px solid var(--border);
   background: var(--panel);
-  margin-bottom: 4px;
+  margin-bottom: 8px;
   cursor: grab;
-  transition: all 0.15s;
+  transition: all 0.2s;
 }
 .lib-item:hover {
   border-color: var(--accent);
-  background: var(--panel-hover);
+  background: var(--panel);
   transform: translateY(-1px);
-  box-shadow: var(--shadow-sm);
+  box-shadow: var(--shadow);
 }
 .lib-item:active { cursor: grabbing; }
 .lib-item.dragging { opacity: 0.4; }
@@ -370,10 +383,11 @@ input, textarea { font-family: inherit; }
 .t-wide { width: 100%; height: 100%; }
 
 .lib-item-name {
-  font-size: 12px;
+  font-family: var(--font-serif);
+  font-size: 14px;
   font-weight: 500;
   color: var(--text);
-  margin-bottom: 2px;
+  margin-bottom: 3px;
 }
 .lib-item-desc {
   font-size: 10.5px;
@@ -836,13 +850,14 @@ body.space-down .canvas-scroll *, body.panning .canvas-scroll * { pointer-events
   font-size: 10px;
   font-weight: 600;
   text-transform: uppercase;
-  letter-spacing: 0.6px;
-  color: var(--text-muted);
+  letter-spacing: 3px;
+  color: var(--accent);
   margin-bottom: 6px;
 }
 .insp-name {
-  font-size: 16px;
-  font-weight: 600;
+  font-family: var(--font-serif);
+  font-size: 20px;
+  font-weight: 500;
   color: var(--text);
   margin-bottom: 4px;
 }
@@ -1091,7 +1106,7 @@ body.space-down .canvas-scroll *, body.panning .canvas-scroll * { pointer-events
   justify-content: space-between;
   gap: 12px;
 }
-.welcome-title { font-size: 20px; font-weight: 600; color: var(--text); margin-bottom: 4px; }
+.welcome-title { font-family: var(--font-serif); font-size: 26px; font-weight: 500; color: var(--text); margin-bottom: 4px; }
 .welcome-sub { font-size: 12px; color: var(--text-muted); }
 .welcome-tabs {
   display: flex;
@@ -1160,7 +1175,7 @@ body.space-down .canvas-scroll *, body.panning .canvas-scroll * { pointer-events
   justify-content: flex-start;
 }
 .tmpl-card-body { padding: 12px 14px; }
-.tmpl-card-name { font-size: 13px; font-weight: 600; color: var(--text); margin-bottom: 3px; }
+.tmpl-card-name { font-family: var(--font-serif); font-size: 15px; font-weight: 500; color: var(--text); margin-bottom: 3px; }
 .tmpl-card-desc { font-size: 11px; color: var(--text-muted); line-height: 1.4; min-height: 30px; }
 .tmpl-card-meta {
   display: flex;
