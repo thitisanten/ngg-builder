@@ -984,6 +984,48 @@ body.space-down .canvas-scroll *, body.panning .canvas-scroll * { pointer-events
 }
 .text-input:focus { border-color: var(--accent); background: var(--panel); }
 
+/* Color picker fields */
+.color-field { margin-bottom: 12px; }
+.color-row { display: flex; gap: 6px; margin-bottom: 6px; }
+.color-swatch {
+  width: 34px; height: 28px;
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  background: none;
+  padding: 2px;
+  cursor: pointer;
+}
+.color-swatch::-webkit-color-swatch-wrapper { padding: 0; }
+.color-swatch::-webkit-color-swatch { border: none; border-radius: 2px; }
+.color-hex {
+  flex: 1;
+  height: 28px;
+  padding: 0 8px;
+  background: var(--panel-2);
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  color: var(--text);
+  outline: none;
+}
+.color-hex::placeholder { color: var(--text-subtle); }
+.color-hex:focus { border-color: var(--accent); background: var(--panel); }
+.color-presets {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+.color-preset {
+  width: 20px; height: 20px;
+  border: 1px solid var(--border);
+  border-radius: 2px;
+  cursor: pointer;
+  padding: 0;
+  transition: transform 0.1s;
+}
+.color-preset:hover { transform: scale(1.15); border-color: var(--text); }
+
 .notes-block {
   background: var(--panel-2);
   border-left: 3px solid var(--accent);
@@ -1342,6 +1384,12 @@ body.space-down .canvas-scroll *, body.panning .canvas-scroll * { pointer-events
 
 .s-text-center { text-align: center; }
 
+/* Per-instance color overrides (Inspector "Colors" pickers) */
+.section[data-colored] .s-btn          { background: var(--sec-accent, #AA182C) !important; }
+.section[data-colored] .s-btn-outline  { border-color: var(--sec-accent, #111) !important; color: var(--sec-accent, #111) !important; }
+.section[data-colored] .s-h,
+.section[data-colored] .s-h-lg         { color: var(--sec-text, inherit); }
+
 .scrollbar::-webkit-scrollbar { width: 8px; height: 8px; }
 .scrollbar::-webkit-scrollbar-track { background: transparent; }
 .scrollbar::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
@@ -1604,6 +1652,11 @@ const I18N = {
     template_name_prompt: 'Name this template:',
     filter_by_pt: 'Match page type only',
     sections_count: '{n} sections',
+    colors: 'Colors',
+    color_bg: 'Background',
+    color_accent: 'Accent (button)',
+    color_text: 'Heading text',
+    none: 'none',
   },
   th: {
     subtitle: 'เครื่องมือสเปคหน้าแรก',
@@ -1670,6 +1723,11 @@ const I18N = {
     template_name_prompt: 'ตั้งชื่อ template:',
     filter_by_pt: 'แสดงเฉพาะที่เข้ากับ page type',
     sections_count: '{n} sections',
+    colors: 'สี',
+    color_bg: 'พื้นหลัง',
+    color_accent: 'สีเน้น (ปุ่ม)',
+    color_text: 'สีหัวข้อ',
+    none: 'ไม่กำหนด',
   }
 };
 
@@ -2572,9 +2630,22 @@ function makeInstance(sectionId) {
     sectionId,
     images: (def.images || []).map(() => makeImageSlot()),
     texts: {},
+    colors: {},    // { bg, accent, text } — all optional overrides
     note: ''
   };
 }
+
+/* Brand color presets for the per-section color pickers */
+const COLOR_PRESETS = [
+  { name: 'Brand Red',   value: '#AA182C' },
+  { name: 'Burgundy',    value: '#7B1F2E' },
+  { name: 'Ink',         value: '#1A1A1A' },
+  { name: 'Gold',        value: '#C7B695' },
+  { name: 'Gold Dark',   value: '#907962' },
+  { name: 'Gold Soft',   value: '#F6DAAB' },
+  { name: 'Cream',       value: '#FAF8F5' },
+  { name: 'White',       value: '#FFFFFF' },
+];
 
 /* Text helper — returns instance override or default text for the current language. */
 function txt(sec, key) {
@@ -2673,6 +2744,7 @@ function loadPersisted() {
       state.layout.forEach(inst => {
         if (!inst.id) inst.id = nextId();
         if (!inst.texts || typeof inst.texts !== 'object') inst.texts = {};
+        if (!inst.colors || typeof inst.colors !== 'object') inst.colors = {};
         const def = SECTIONS[inst.sectionId];
         const expected = (def.images || []).length;
         const cur = Array.isArray(inst.images) ? inst.images : [];
@@ -2776,7 +2848,14 @@ function renderViewport(vpName) {
     if (!def) return;
     const isSel = inst.id === state.selectedId;
     const inner = def.render(vpName, inst, state.lang);
-    html += `<div class="section ${isSel?'selected':''}" data-inst="${inst.id}" data-idx="${idx}">
+    const c = inst.colors || {};
+    const colorAttrs = (c.bg || c.accent || c.text) ? ' data-colored="true"' : '';
+    const colorStyle = [
+      c.bg ? `background-color:${c.bg};` : '',
+      c.accent ? `--sec-accent:${c.accent};` : '',
+      c.text ? `--sec-text:${c.text}; color:${c.text};` : '',
+    ].join('');
+    html += `<div class="section ${isSel?'selected':''}"${colorAttrs} data-inst="${inst.id}" data-idx="${idx}" style="${colorStyle}">
       ${inner}
       <div class="sec-controls">
         <button class="sec-ctrl-btn" data-action="up" title="Move up">↑</button>
@@ -3042,6 +3121,27 @@ function renderInspector() {
       </div>
 
       <div class="insp-section">
+        <div class="insp-label">${t('colors')}</div>
+        ${['bg','accent','text'].map(k => {
+          const cur = (inst.colors && inst.colors[k]) || '';
+          const labelKey = 'color_' + k;
+          return `<div class="color-field">
+            <div class="text-field-head">
+              <label>${t(labelKey)}</label>
+              ${cur ? `<button class="text-reset" data-cc="${k}" title="${t('reset')}">↺</button>` : ''}
+            </div>
+            <div class="color-row">
+              <input type="color" class="color-swatch" data-cc="${k}" value="${cur || '#ffffff'}">
+              <input type="text" class="color-hex" data-cc="${k}" value="${cur}" placeholder="${t('none')}">
+            </div>
+            <div class="color-presets">
+              ${COLOR_PRESETS.map(p => `<button class="color-preset" data-cc="${k}" data-v="${p.value}" title="${p.name}" style="background:${p.value};"></button>`).join('')}
+            </div>
+          </div>`;
+        }).join('')}
+      </div>
+
+      <div class="insp-section">
         <div class="insp-label">${t('notes_team')}</div>
         <div class="notes-block" style="margin-bottom:8px;">${escapeHtml(def.notes[state.lang])}</div>
         <textarea class="notes-input" id="instance-note" placeholder="${t('add_note')}">${escapeHtml(inst.note || '')}</textarea>
@@ -3130,10 +3230,37 @@ function renderInspector() {
   wrap.querySelectorAll('.text-reset').forEach(btn => {
     btn.addEventListener('click', () => {
       const key = btn.dataset.tk;
-      if (inst.texts) delete inst.texts[key];
+      const cc = btn.dataset.cc;
+      if (cc) {
+        if (inst.colors) delete inst.colors[cc];
+      } else if (key) {
+        if (inst.texts) delete inst.texts[key];
+      }
       pushHistory();
       render();
     });
+  });
+
+  // color pickers
+  const applyColor = (k, v) => {
+    if (!inst.colors) inst.colors = {};
+    if (!v) delete inst.colors[k];
+    else inst.colors[k] = v;
+    pushHistory();
+    render();
+  };
+  wrap.querySelectorAll('input.color-swatch').forEach(el => {
+    el.addEventListener('change', () => applyColor(el.dataset.cc, el.value));
+  });
+  wrap.querySelectorAll('input.color-hex').forEach(el => {
+    el.addEventListener('change', () => {
+      const v = el.value.trim();
+      if (v && !/^#?[0-9a-fA-F]{3,8}$/.test(v.replace('#',''))) return;
+      applyColor(el.dataset.cc, v ? (v.startsWith('#') ? v : '#' + v) : '');
+    });
+  });
+  wrap.querySelectorAll('button.color-preset').forEach(el => {
+    el.addEventListener('click', () => applyColor(el.dataset.cc, el.dataset.v));
   });
 }
 
@@ -3564,6 +3691,7 @@ function updateExportText() {
         name: def.name.en,
         note: inst.note || '',
         texts: inst.texts && Object.keys(inst.texts).length ? Object.assign({}, inst.texts) : undefined,
+        colors: inst.colors && Object.keys(inst.colors).length ? Object.assign({}, inst.colors) : undefined,
         images: (def.images || []).map((spec, k) => {
           const slot = normalizeImageSlot(inst.images[k]);
           const effSpec = getImageSpec(inst, k);
@@ -3616,6 +3744,7 @@ function applyImport() {
       const inst = makeInstance(item.sectionId);
       inst.note = item.note || '';
       if (item.texts && typeof item.texts === 'object') inst.texts = Object.assign({}, item.texts);
+      if (item.colors && typeof item.colors === 'object') inst.colors = Object.assign({}, item.colors);
       if (Array.isArray(item.images)) {
         item.images.forEach((im, k) => {
           if (k >= inst.images.length) return;
