@@ -1627,6 +1627,7 @@ const I18N = {
     preset_default: 'Default',
     preset_custom: 'Custom',
     custom_label: 'CUSTOM',
+    inherited_from_desktop: 'inherited from Desktop',
     reset: 'Reset',
     hint_pan: 'Hold Space to pan · ⌘+/− to zoom',
     text_content: 'Text content',
@@ -1698,6 +1699,7 @@ const I18N = {
     preset_default: 'ค่าเริ่มต้น',
     preset_custom: 'กำหนดเอง',
     custom_label: 'CUSTOM',
+    inherited_from_desktop: 'สืบทอดจาก Desktop',
     reset: 'รีเซ็ต',
     hint_pan: 'กด Space เพื่อลาก · ⌘+/− ซูม',
     text_content: 'ข้อความ',
@@ -2688,7 +2690,7 @@ let uid = 1;
 function nextId() { return 'i' + (uid++); }
 
 function makeImageSlot() {
-  return { desktop: null, tablet: null, mobile: null, customW: null, customH: null };
+  return { desktop: null, tablet: null, mobile: null, ratio: { desktop: null, tablet: null, mobile: null } };
 }
 
 function makeInstance(sectionId) {
@@ -2735,15 +2737,18 @@ function getImageData(inst, i, vp) {
   return slot[vp] || slot.desktop || null;
 }
 
-/* Effective image spec (custom ratio override). */
-function getImageSpec(inst, i) {
+/* Effective image spec for a viewport (per-device ratio override, falls back
+   to the desktop override, then to the section's base spec). */
+function getImageSpec(inst, i, vp) {
+  vp = vp || 'desktop';
   const def = SECTIONS[inst.sectionId];
   const baseSpec = def && def.images ? def.images[i] : null;
   const slot = inst.images[i];
   if (!baseSpec) return null;
-  if (!slot) return baseSpec;
-  if (slot.customW && slot.customH) {
-    return Object.assign({}, baseSpec, { w: slot.customW, h: slot.customH });
+  if (!slot || !slot.ratio) return baseSpec;
+  const ov = slot.ratio[vp] || (vp !== 'desktop' ? slot.ratio.desktop : null);
+  if (ov && ov.w && ov.h) {
+    return Object.assign({}, baseSpec, { w: ov.w, h: ov.h });
   }
   return baseSpec;
 }
@@ -2752,14 +2757,28 @@ function getImageSpec(inst, i) {
 function normalizeImageSlot(raw) {
   if (!raw) return makeImageSlot();
   if (raw.dataUrl) {
-    return { desktop: { dataUrl: raw.dataUrl, w: raw.w, h: raw.h }, tablet: null, mobile: null, customW: null, customH: null };
+    return { desktop: { dataUrl: raw.dataUrl, w: raw.w, h: raw.h }, tablet: null, mobile: null, ratio: { desktop: null, tablet: null, mobile: null } };
+  }
+  // Pre-per-device-ratio format: a single global customW/customH applied to every viewport.
+  // Treat it as the desktop override so existing layouts render unchanged (mobile/tablet
+  // still inherit from desktop) until someone opts in to a per-device override.
+  if (raw.customW && raw.customH && !raw.ratio) {
+    return {
+      desktop: raw.desktop || null,
+      tablet:  raw.tablet  || null,
+      mobile:  raw.mobile  || null,
+      ratio: { desktop: { w: raw.customW, h: raw.customH }, tablet: null, mobile: null },
+    };
   }
   return {
     desktop: raw.desktop || null,
     tablet:  raw.tablet  || null,
     mobile:  raw.mobile  || null,
-    customW: raw.customW || null,
-    customH: raw.customH || null,
+    ratio: {
+      desktop: (raw.ratio && raw.ratio.desktop) || null,
+      tablet:  (raw.ratio && raw.ratio.tablet)  || null,
+      mobile:  (raw.ratio && raw.ratio.mobile)  || null,
+    },
   };
 }
 
@@ -3056,6 +3075,8 @@ function renderInspector() {
     { key: '16:9', w: 16, h: 9 },
     { key: '2:1', w: 2, h: 1 },
     { key: '21:9', w: 21, h: 9 },
+    { key: '4:5', w: 4, h: 5 },
+    { key: '9:16', w: 9, h: 16 },
     { key: 'custom', label: t('preset_custom') },
   ];
 
@@ -3066,10 +3087,12 @@ function renderInspector() {
     imagesHtml = def.images.map((baseSpec, i) => {
       inst.images[i] = normalizeImageSlot(inst.images[i]);
       const slot = inst.images[i];
-      const effSpec = getImageSpec(inst, i);
+      const effSpec = getImageSpec(inst, i, dev);
       const ratio = (effSpec.w / effSpec.h).toFixed(2);
       const baseRatio = (baseSpec.w / baseSpec.h).toFixed(2);
-      const customActive = !!(slot.customW && slot.customH);
+      const devOverride = slot.ratio[dev];                                   // override set on THIS device
+      const inheritedOverride = !devOverride && dev !== 'desktop' ? slot.ratio.desktop : null; // inherited from Desktop
+      const customActive = !!devOverride || !!inheritedOverride;
 
       // device tabs
       const tabs = ['desktop','tablet','mobile'].map(d => {
@@ -3096,7 +3119,8 @@ function renderInspector() {
       // ratio preset detection
       let activePreset = customActive ? 'custom' : 'default';
       if (customActive) {
-        const r = slot.customW / slot.customH;
+        const eff = devOverride || inheritedOverride;
+        const r = eff.w / eff.h;
         for (const p of ratioPresets) {
           if (p.w && Math.abs(p.w/p.h - r) < 0.001) { activePreset = p.key; break; }
         }
@@ -3112,12 +3136,13 @@ function renderInspector() {
       return `<div class="image-card">
         <div class="image-card-head">
           <div class="image-card-name">${escapeHtml(baseSpec.name)}</div>
-          <span class="chip mono">${effSpec.w}×${effSpec.h}${customActive?' *':''}</span>
+          <span class="chip mono">${effSpec.w}×${effSpec.h}${devOverride?' *':(inheritedOverride?' ↳':'')}</span>
         </div>
         <div class="insp-meta-row">
           <span class="chip gold">${ratio}:1</span>
           <span class="chip">${baseSpec.format}</span>
-          ${customActive ? `<span class="chip" style="color:var(--brand);border-color:var(--brand);">${t('custom_label')}</span>` : ''}
+          ${devOverride ? `<span class="chip" style="color:var(--brand);border-color:var(--brand);">${t('custom_label')}</span>` : ''}
+          ${inheritedOverride ? `<span class="chip" title="${t('inherited_from_desktop')}">↳ ${t('inherited_from_desktop')}</span>` : ''}
         </div>
 
         <div class="dev-tabs">${tabs}</div>
@@ -3129,7 +3154,7 @@ function renderInspector() {
         </div>
 
         <div class="ratio-section">
-          <div class="ratio-label">${t('image_ratio')}</div>
+          <div class="ratio-label">${t('image_ratio')} — ${devLabel[dev]}${inheritedOverride ? ` <span style="font-weight:400;font-style:italic;color:var(--text-subtle);">(${t('inherited_from_desktop')})</span>` : ''}</div>
           <select class="ratio-preset" data-act="preset" data-inst="${inst.id}" data-i="${i}" data-base-w="${baseSpec.w}" data-base-h="${baseSpec.h}">
             ${presetOptions}
           </select>
@@ -3137,7 +3162,7 @@ function renderInspector() {
             <input type="number" class="ratio-w" data-inst="${inst.id}" data-i="${i}" value="${effSpec.w}" min="1">
             <span>×</span>
             <input type="number" class="ratio-h" data-inst="${inst.id}" data-i="${i}" value="${effSpec.h}" min="1">
-            <button class="ratio-reset" data-act="resetratio" data-inst="${inst.id}" data-i="${i}" title="${t('reset')}">↺</button>
+            <button class="ratio-reset" data-act="resetratio" data-inst="${inst.id}" data-i="${i}" title="${devOverride ? t('reset') : t('reset')}" ${devOverride ? '' : 'disabled'}>↺</button>
           </div>
         </div>
 
@@ -3402,7 +3427,7 @@ function render() {
    PLACEHOLDER HTML
    ============================================================ */
 function phEl(sec, imgIdx, lang, vp) {
-  const spec = getImageSpec(sec, imgIdx);
+  const spec = getImageSpec(sec, imgIdx, vp);
   if (!spec) return '';
   const data = getImageData(sec, imgIdx, vp);
   const slot = sec.images[imgIdx] || {};
@@ -3491,21 +3516,21 @@ function removeImageFor(instId, imgIdx, device) {
   toast(t('toast_image_removed'));
 }
 
-function setCustomRatio(instId, imgIdx, w, h) {
+function setCustomRatio(instId, imgIdx, w, h, device) {
+  device = device || state.inspectorDevice || 'desktop';
   const inst = state.layout.find(x => x.id === instId);
   if (!inst) return;
   inst.images[imgIdx] = normalizeImageSlot(inst.images[imgIdx]);
-  inst.images[imgIdx].customW = w || null;
-  inst.images[imgIdx].customH = h || null;
+  inst.images[imgIdx].ratio[device] = (w && h) ? { w, h } : null;
   render();
 }
 
-function resetCustomRatio(instId, imgIdx) {
+function resetCustomRatio(instId, imgIdx, device) {
+  device = device || state.inspectorDevice || 'desktop';
   const inst = state.layout.find(x => x.id === instId);
   if (!inst) return;
   inst.images[imgIdx] = normalizeImageSlot(inst.images[imgIdx]);
-  inst.images[imgIdx].customW = null;
-  inst.images[imgIdx].customH = null;
+  inst.images[imgIdx].ratio[device] = null;
   render();
 }
 
@@ -3763,7 +3788,9 @@ function updateExportText() {
         colors: inst.colors && Object.keys(inst.colors).length ? Object.assign({}, inst.colors) : undefined,
         images: (def.images || []).map((spec, k) => {
           const slot = normalizeImageSlot(inst.images[k]);
-          const effSpec = getImageSpec(inst, k);
+          const effSpec = getImageSpec(inst, k, 'desktop');
+          const ratioOverrides = {};
+          ['desktop','tablet','mobile'].forEach(d => { if (slot.ratio[d]) ratioOverrides[d] = slot.ratio[d]; });
           const out = {
             name: spec.name,
             w: effSpec.w,
@@ -3771,7 +3798,7 @@ function updateExportText() {
             baseW: spec.w,
             baseH: spec.h,
             format: spec.format,
-            customRatio: !!(slot.customW && slot.customH),
+            ratioOverrides: Object.keys(ratioOverrides).length ? ratioOverrides : undefined,
             variants: {
               desktop: !!slot.desktop,
               tablet:  !!slot.tablet,
@@ -3825,8 +3852,14 @@ function applyImport() {
           } else if (im && im.dataUrl) {
             slot.desktop = { dataUrl: im.dataUrl, w: im.uploadedW || im.w, h: im.uploadedH || im.h };
           }
-          if (im && im.customRatio && im.w && im.h && im.baseW && im.baseH && (im.w !== im.baseW || im.h !== im.baseH)) {
-            slot.customW = im.w; slot.customH = im.h;
+          if (im && im.ratioOverrides && typeof im.ratioOverrides === 'object') {
+            ['desktop','tablet','mobile'].forEach(d => {
+              const ov = im.ratioOverrides[d];
+              if (ov && ov.w && ov.h) slot.ratio[d] = { w: ov.w, h: ov.h };
+            });
+          } else if (im && im.customRatio && im.w && im.h && im.baseW && im.baseH && (im.w !== im.baseW || im.h !== im.baseH)) {
+            // legacy export format (single global override) — treat as the desktop override
+            slot.ratio.desktop = { w: im.w, h: im.h };
           }
           inst.images[k] = slot;
         });
