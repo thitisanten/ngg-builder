@@ -1564,6 +1564,7 @@ body.space-down .canvas-scroll *, body.panning .canvas-scroll * { pointer-events
     <div class="welcome-tabs">
       <button class="welcome-tab active" data-pt="homepage">🏠 <span data-i18n="pt_homepage">Homepage</span></button>
       <button class="welcome-tab" data-pt="landing">🎯 <span data-i18n="pt_landing">Landing Page</span></button>
+      <button class="welcome-tab" data-pt="listing">🗂️ <span data-i18n="pt_listing">Product Listing</span></button>
       <button class="welcome-tab" data-pt="custom">✨ <span data-i18n="pt_custom">Custom</span></button>
     </div>
     <div class="welcome-body scrollbar" id="welcome-body"></div>
@@ -1641,7 +1642,7 @@ const I18N = {
     welcome_title: 'Start a new project',
     welcome_sub: 'Pick a template or start from scratch',
     welcome_hint: 'Click a template to apply',
-    pt_homepage: 'Homepage', pt_landing: 'Landing Page', pt_custom: 'Custom',
+    pt_homepage: 'Homepage', pt_landing: 'Landing Page', pt_listing: 'Product Listing', pt_custom: 'Custom',
     save_custom: 'Save current as template',
     custom_templates: 'Your saved templates',
     no_custom: 'No saved templates yet. Use "Save current as template" to add one.',
@@ -1712,7 +1713,7 @@ const I18N = {
     welcome_title: 'เริ่มโปรเจกต์ใหม่',
     welcome_sub: 'เลือก template หรือเริ่มจากศูนย์',
     welcome_hint: 'คลิกที่ template เพื่อใช้งาน',
-    pt_homepage: 'หน้าแรก', pt_landing: 'แลนดิ้งเพจ', pt_custom: 'กำหนดเอง',
+    pt_homepage: 'หน้าแรก', pt_landing: 'แลนดิ้งเพจ', pt_listing: 'หน้ารายการสินค้า', pt_custom: 'กำหนดเอง',
     save_custom: 'บันทึก layout ปัจจุบันเป็น template',
     custom_templates: 'Template ที่บันทึกไว้',
     no_custom: 'ยังไม่มี template ที่บันทึกไว้ ใช้ "บันทึก layout ปัจจุบัน" เพื่อสร้าง',
@@ -2104,6 +2105,63 @@ const SECTIONS = {
     }
   },
 
+  breadcrumbs: {
+    cat: 'ngg',
+    name: { en: 'Breadcrumbs', th: 'เส้นทางนำทาง' },
+    desc: { en: 'Thin navigation trail below header', th: 'แถบนำทางบางๆ ใต้ส่วนหัว' },
+    images: [],
+    texts: {
+      trail: { label: { en: 'Trail', th: 'เส้นทาง' }, default: { en: 'Home / House Brands / Zoullink', th: 'หน้าแรก / แบรนด์ในเครือ / Zoullink' } },
+    },
+    notes: { en: 'Small gray text, ~68px tall row.', th: 'ตัวอักษรเล็กสีเทา สูงประมาณ 68px' },
+    render: (vp, sec) => `<div class="s-block" style="padding:${vp==='mobile'?'16px':'22px 60px'};">
+      <div style="font-size:12px;color:#888;">${etxt(sec,'trail')}</div>
+    </div>`
+  },
+
+  filter_bar: {
+    cat: 'ngg',
+    name: { en: 'Filter + Category Bar', th: 'แถบตัวกรอง + หมวดหมู่' },
+    desc: { en: 'Filter button, category chips and sort dropdown', th: 'ปุ่มตัวกรอง ชิปหมวดหมู่ และเรียงลำดับ' },
+    images: [],
+    texts: {
+      chip1: { label: { en: 'Chip 1', th: 'ชิป 1' }, default: { en: 'All', th: 'ทั้งหมด' } },
+      chip2: { label: { en: 'Chip 2', th: 'ชิป 2' }, default: { en: 'Rings', th: 'แหวน' } },
+      chip3: { label: { en: 'Chip 3', th: 'ชิป 3' }, default: { en: 'Necklaces', th: 'สร้อยคอ' } },
+      chip4: { label: { en: 'Chip 4', th: 'ชิป 4' }, default: { en: 'Earrings', th: 'ต่างหู' } },
+      chip5: { label: { en: 'Chip 5', th: 'ชิป 5' }, default: { en: 'Gold Jewelleries', th: 'ทองรูปพรรณ' } },
+      sort:  { label: { en: 'Sort label', th: 'ป้ายเรียงลำดับ' }, default: { en: 'Sort by', th: 'เรียงตาม' } },
+    },
+    notes: { en: 'Sticky under header on scroll. First chip is the active state.', th: 'ติดใต้ header เมื่อเลื่อน ชิปแรกคือสถานะ active' },
+    render: (vp, sec) => {
+      const chips = ['chip1','chip2','chip3','chip4','chip5'];
+      return `<div class="s-block" style="padding:${vp==='mobile'?'16px':'20px 60px'};border-bottom:1px solid #eee;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;">
+        <div style="border:1px solid #111;border-radius:20px;padding:8px 16px;font-size:12px;font-weight:500;white-space:nowrap;">FILTER +</div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;">
+          ${chips.map((k,i)=>`<div style="border:1px solid ${i===0?'#111':'#ddd'};background:${i===0?'#111':'#fff'};color:${i===0?'#fff':'#333'};border-radius:20px;padding:8px 16px;font-size:12px;white-space:nowrap;">${etxt(sec,k)}</div>`).join('')}
+        </div>
+        <div style="border:1px solid #ddd;border-radius:20px;padding:8px 16px;font-size:12px;white-space:nowrap;">${etxt(sec,'sort')} ▾</div>
+      </div>`;
+    }
+  },
+
+  pagination: {
+    cat: 'ngg',
+    name: { en: 'Results + Load More', th: 'จำนวนผลลัพธ์ + โหลดเพิ่ม' },
+    desc: { en: 'Item count, progress bar and load more button', th: 'จำนวนสินค้า แถบความคืบหน้า และปุ่มโหลดเพิ่ม' },
+    images: [],
+    texts: {
+      count: { label: { en: 'Item count', th: 'จำนวนรายการ' }, default: { en: '1 - 20 of 2,942 Items', th: '1 - 20 จาก 2,942 รายการ' } },
+      btn:   { label: { en: 'Button', th: 'ปุ่ม' }, default: { en: 'Load more', th: 'โหลดเพิ่ม' } },
+    },
+    notes: { en: 'Centered, max-width 410px. Progress bar shows load position.', th: 'จัดกึ่งกลาง กว้างสุด 410px แถบแสดงความคืบหน้าของการโหลด' },
+    render: (vp, sec) => `<div class="s-block s-text-center" style="padding:${vp==='mobile'?'32px 16px':'48px 60px'};">
+      <div style="font-size:13px;color:#666;margin-bottom:12px;">${etxt(sec,'count')}</div>
+      <div style="max-width:410px;margin:0 auto 20px;height:2px;background:#eee;"><div style="width:20%;height:100%;background:#111;"></div></div>
+      <div class="s-btn-outline">${etxt(sec,'btn')}</div>
+    </div>`
+  },
+
   /* ----------- GENERIC PATTERNS ----------- */
   nav_bar: {
     cat: 'generic',
@@ -2456,6 +2514,14 @@ const TEMPLATES = {
       sections: ['hero_centered','text_section','newsletter'],
     },
   ],
+  listing: [
+    {
+      id: 'brand-collection-listing',
+      name: { en: 'Brand / Collection Listing', th: 'หน้าแบรนด์ / คอลเลกชัน' },
+      desc: { en: 'Brand story hero, gallery, alternating collections, filterable product grid with pagination', th: 'เรื่องราวแบรนด์ แกลเลอรี คอลเลกชันสลับซ้ายขวา และตารางสินค้าพร้อมตัวกรองและเพจจิเนชัน' },
+      sections: ['header','breadcrumbs','sub_banner','text_section','feature_image_text','text_section','promo_split','square_grid_3','promo_text_split','promo_text_split','filter_bar','product_grid_4','product_grid_4','promo_text_split','product_grid_4','product_grid_4','product_grid_4','pagination','footer'],
+    },
+  ],
   custom: [
     {
       id: 'blank',
@@ -2471,6 +2537,7 @@ const TEMPLATES = {
 const PAGE_TYPE_SECTIONS = {
   homepage: ['header','hero','hero_centered','hero_split','sub_banner','product_grid_4','promo_split','promo_text_split','square_grid_3','feature_image_text','logo_strip','tall_grid_3','feature_grid_3','text_section','footer','blog_cards','gallery_grid','testimonials','newsletter','cta_banner','nav_bar'],
   landing:  ['nav_bar','hero_centered','hero_split','hero','features_bento','stats','testimonials','faq_accordion','cta_banner','newsletter','pricing_3tier','contact_form','team_grid','text_section','dashboard_stats','footer'],
+  listing:  ['header','breadcrumbs','sub_banner','text_section','feature_image_text','promo_split','square_grid_3','promo_text_split','filter_bar','product_grid_4','pagination','footer','logo_strip','tall_grid_3','feature_grid_3'],
 };
 
 function getCustomTemplates() {
@@ -2504,6 +2571,7 @@ const MINI_SHAPE = {
   square_grid_3: 'grid-3', feature_image_text: 'split-half', logo_strip: 'logos',
   tall_grid_3: 'tall-3', feature_grid_3: 'grid-3', text_section: 'text',
   footer: 'bar-tall',
+  breadcrumbs: 'text', filter_bar: 'bar-thin', pagination: 'bar-mid',
   cta_banner: 'bar-mid', testimonials: 'cards-3', faq_accordion: 'lines',
   pricing_3tier: 'cards-3', features_bento: 'bento', auth_form: 'card-center',
   newsletter: 'bar-mid', blog_cards: 'cards-3', contact_form: 'form',
@@ -2525,6 +2593,7 @@ const LIB_THUMB = {
   logo_strip: 'logos',
   text_section: 'text',
   footer: 'footer',
+  breadcrumbs: 'text', filter_bar: 'nav', pagination: 'cta',
   auth_form: 'form-center', contact_form: 'form',
   features_bento: 'bento',
   cta_banner: 'cta', newsletter: 'cta',
@@ -3864,7 +3933,7 @@ function templateCard(tmpl, ptype, isCustom = false) {
 function findTemplate(id) {
   const customs = getCustomTemplates();
   for (const c of customs) if (c.id === id) return { tmpl: c, pt: c.pageType || 'custom', isCustom: true };
-  for (const cat of ['homepage','landing','custom']) {
+  for (const cat of ['homepage','landing','listing','custom']) {
     for (const t of (TEMPLATES[cat] || [])) if (t.id === id) return { tmpl: t, pt: cat, isCustom: false };
   }
   return null;
