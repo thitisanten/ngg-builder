@@ -2445,7 +2445,13 @@ const SECTIONS = {
   }
 };
 
-const NGG_DEFAULT = ['header','hero','sub_banner','product_grid_4','promo_split','promo_text_split','square_grid_3','feature_image_text','logo_strip','tall_grid_3','text_section','feature_grid_3','footer'];
+/* Mirrors the "Homepage — UX V.1 Exact" Figma mockup section-by-section:
+   nav -> hero -> heritage intro -> perfect collection (split + grid) ->
+   3-card collection -> store banner -> featured products -> seasonal
+   collection -> house brands (logos + feature) -> campaign banner ->
+   editorial -> craftsmanship (feature + 3-col) -> become a member ->
+   benefits -> visit-store CTA -> footer. */
+const NGG_DEFAULT = ['header','hero','cta_banner','promo_text_split','product_grid_4','square_grid_3','sub_banner','product_grid_4','feature_image_text','logo_strip','promo_text_split','sub_banner','blog_cards','feature_image_text','feature_grid_3','cta_banner','feature_grid_3','cta_banner','footer'];
 
 /* ============================================================
    TEMPLATES
